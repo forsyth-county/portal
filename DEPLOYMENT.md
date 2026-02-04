@@ -35,6 +35,58 @@ This project is configured for automatic deployment to GitHub Pages:
 3. **Access your site**:
    - Your site will be available at: `https://<username>.github.io/portal/`
 
+### Custom Domain Setup
+
+You can use your own custom domain with GitHub Pages:
+
+#### Supported Custom Domain Types
+
+| Domain Type | Example | Use Case |
+|-------------|---------|----------|
+| **Apex domain** | `yourdomain.com` | Main website |
+| **Subdomain** | `games.yourdomain.com` | Dedicated games portal |
+| **www subdomain** | `www.yourdomain.com` | Traditional web address |
+
+#### Setup Instructions
+
+1. **Configure DNS** at your domain registrar:
+
+   **For apex domains** (e.g., `yourdomain.com`):
+   ```
+   A     @     185.199.108.153
+   A     @     185.199.109.153
+   A     @     185.199.110.153
+   A     @     185.199.111.153
+   ```
+
+   **For subdomains** (e.g., `games.yourdomain.com`):
+   ```
+   CNAME   games   <username>.github.io
+   ```
+
+2. **Add custom domain in GitHub**:
+   - Go to Settings → Pages
+   - Enter your domain in "Custom domain"
+   - Check "Enforce HTTPS" (after DNS propagates)
+
+3. **Create CNAME file** (optional - GitHub can create this):
+   - Create `public/CNAME` with your domain:
+     ```
+     yourdomain.com
+     ```
+
+4. **Update build configuration**:
+   - When using a custom domain, remove the `GITHUB_PAGES=true` environment variable
+   - This sets `basePath` and `assetPrefix` to empty strings (root deployment)
+
+#### Popular Domain Registrars
+
+- **Cloudflare** - Free DNS with CDN and DDoS protection
+- **Namecheap** - Affordable domains with free WhoisGuard
+- **Google Domains** - Simple interface, good integration
+- **Porkbun** - Low prices, free WHOIS privacy
+- **GoDaddy** - Large selection, frequent sales
+
 ### Manual Deployment
 
 ```bash
