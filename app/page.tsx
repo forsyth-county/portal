@@ -118,7 +118,7 @@ export default function Home() {
         transition={{ delay: 1, duration: 0.6 }}
         className="text-center text-sm text-muted-foreground py-8 border-t border-border space-y-4"
       >
-        <p>Curated by the Celestium Online Team — Click a Game to Play</p>
+        <p>Curated by the Weather Man — Click a Game to Play</p>
         <div className="flex items-center justify-center gap-4">
           <a 
             href="/privacy" 
