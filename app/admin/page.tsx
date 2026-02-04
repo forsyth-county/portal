@@ -2,10 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, Lock, Send, Trash2, Bell, CheckCircle, AlertTriangle, Copy, Download } from 'lucide-react'
+import { Shield, Lock, Send, Trash2, Bell, CheckCircle, AlertTriangle, Copy, Download, Eye, Users, Activity, TrendingUp, RefreshCw } from 'lucide-react'
 import { withBasePath } from '@/lib/utils'
+import { posthogAPI } from '@/lib/posthog'
 
 const ADMIN_PASSCODE = '1140' // Admin passcode
+const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes
+
+interface AnalyticsData {
+  totalViews: number;
+  activeUsers: number;
+  totalUsers: number;
+  currentSessions: number;
+  lastUpdated: Date;
+}
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -17,12 +27,25 @@ export default function AdminPage() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [generatedJSON, setGeneratedJSON] = useState('')
   const [copySuccess, setCopySuccess] = useState(false)
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState('')
+  const [sessionStartTime] = useState(Date.now())
 
   useEffect(() => {
     // Check if already authenticated this session
     const authSession = sessionStorage.getItem('forsyth-admin-auth')
-    if (authSession === 'true') {
-      setIsAuthenticated(true)
+    const sessionTime = sessionStorage.getItem('forsyth-admin-time')
+    
+    if (authSession === 'true' && sessionTime) {
+      const sessionAge = Date.now() - parseInt(sessionTime)
+      if (sessionAge < SESSION_TIMEOUT) {
+        setIsAuthenticated(true)
+      } else {
+        // Session expired
+        sessionStorage.removeItem('forsyth-admin-auth')
+        sessionStorage.removeItem('forsyth-admin-time')
+      }
     }
 
     // Load current announcement from public JSON
@@ -42,13 +65,28 @@ export default function AdminPage() {
       }
     }
     loadCurrentAnnouncement()
-  }, [])
+
+    // Check for session timeout
+    const checkSession = setInterval(() => {
+      if (isAuthenticated) {
+        const currentTime = Date.now()
+        if (currentTime - sessionStartTime >= SESSION_TIMEOUT) {
+          setIsAuthenticated(false)
+          sessionStorage.removeItem('forsyth-admin-auth')
+          sessionStorage.removeItem('forsyth-admin-time')
+        }
+      }
+    }, 60000) // Check every minute
+
+    return () => clearInterval(checkSession)
+  }, [isAuthenticated, sessionStartTime])
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (passcode === ADMIN_PASSCODE) {
       setIsAuthenticated(true)
       sessionStorage.setItem('forsyth-admin-auth', 'true')
+      sessionStorage.setItem('forsyth-admin-time', Date.now().toString())
       setPasscodeError('')
     } else {
       setPasscodeError('Incorrect passcode')
@@ -94,6 +132,33 @@ export default function AdminPage() {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
+
+  const loadAnalytics = async () => {
+    setAnalyticsLoading(true)
+    setAnalyticsError('')
+    
+    try {
+      const stats = await posthogAPI.getRealtimeStats()
+      setAnalytics({
+        ...stats,
+        lastUpdated: new Date(),
+      })
+    } catch (error) {
+      console.error('Failed to load analytics:', error)
+      setAnalyticsError('Failed to load analytics. Please check your PostHog configuration.')
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadAnalytics()
+      // Refresh analytics every 30 seconds
+      const interval = setInterval(loadAnalytics, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [isAuthenticated])
 
   const clearAnnouncement = () => {
     const emptyAnnouncement = {
@@ -178,8 +243,87 @@ export default function AdminPage() {
           <span>Admin Authenticated</span>
         </div>
         <h1 className="text-4xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Manage site-wide announcements</p>
+        <p className="text-muted-foreground">Manage site-wide announcements and view analytics</p>
       </motion.div>
+
+      {/* Analytics Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="glass rounded-2xl border border-border p-6 space-y-4"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Real-time Analytics
+          </h2>
+          <button
+            onClick={loadAnalytics}
+            disabled={analyticsLoading}
+            className="px-3 py-1.5 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${analyticsLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        {analyticsError ? (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+            <p className="text-sm">{analyticsError}</p>
+            <p className="text-xs mt-2">Make sure to set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID in your environment variables.</p>
+          </div>
+        ) : analyticsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-4 rounded-xl bg-background/50 border border-border animate-pulse">
+                <div className="h-4 bg-background/70 rounded mb-2 w-1/2"></div>
+                <div className="h-8 bg-background/70 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        ) : analytics ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-xl bg-background/50 border border-border">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <Eye className="w-4 h-4" />
+                  Total Views
+                </div>
+                <div className="text-2xl font-bold text-foreground">{analytics.totalViews.toLocaleString()}</div>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-background/50 border border-border">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <Users className="w-4 h-4" />
+                  Active Users
+                </div>
+                <div className="text-2xl font-bold text-green-400">{analytics.activeUsers.toLocaleString()}</div>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-background/50 border border-border">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <Activity className="w-4 h-4" />
+                  Current Sessions
+                </div>
+                <div className="text-2xl font-bold text-blue-400">{analytics.currentSessions.toLocaleString()}</div>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-background/50 border border-border">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <TrendingUp className="w-4 h-4" />
+                  Total Users
+                </div>
+                <div className="text-2xl font-bold text-purple-400">{analytics.totalUsers.toLocaleString()}</div>
+              </div>
+            </div>
+            
+            <div className="text-xs text-muted-foreground text-center">
+              Last updated: {analytics.lastUpdated.toLocaleTimeString()}
+            </div>
+          </div>
+        ) : null}
+      </motion.section>
 
       {/* Current Announcement */}
       <motion.section
