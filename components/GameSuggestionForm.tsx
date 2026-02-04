@@ -25,6 +25,7 @@ export function GameSuggestionForm() {
     const formData = new FormData(event.target as HTMLFormElement)
     formData.append("access_key", "e93c5755-8acb-4e64-872b-2ba9d3b00e54")
     formData.append("h-captcha-response", captchaToken)
+    formData.append("botcheck", captchaToken)
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
