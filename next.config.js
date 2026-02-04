@@ -4,8 +4,8 @@ const isGitHubPages = process.env.GITHUB_PAGES === 'true'
 const basePath = isGitHubPages ? '/portal' : ''
 
 const nextConfig = {
-  // Temporarily disable static export for API testing
-  // output: 'export',
+  // Enable static export for GitHub Pages
+  output: 'export',
   
   // GitHub Pages serves from /<repo-name>/ path
   // Set to empty string if using custom domain or root deployment
