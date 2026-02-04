@@ -40,10 +40,12 @@ export function GameSuggestionForm() {
         setCaptchaToken("")
         captchaRef.current?.resetCaptcha()
       } else {
-        setResult("Error submitting form. Please try again.")
+        console.error("Form submission failed:", data)
+        setResult(data.message || "Error submitting form. Please try again.")
       }
     } catch (error) {
-      setResult("Error submitting form. Please try again.")
+      console.error("Form submission error:", error)
+      setResult("Unable to submit your suggestion. Please check your connection and try again.")
     } finally {
       setIsSubmitting(false)
     }
