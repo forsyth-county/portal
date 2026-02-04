@@ -34,5 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-public/
+public/*
+!public/announcement.json
 .eslintrc.json
