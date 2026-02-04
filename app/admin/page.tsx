@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, Lock, Send, Trash2, Bell, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Shield, Lock, Send, Trash2, Bell, CheckCircle, AlertTriangle, Copy, Download } from 'lucide-react'
+import { withBasePath } from '@/lib/utils'
 
 const ADMIN_PASSCODE = '1140' // Admin passcode
 
@@ -12,8 +13,10 @@ export default function AdminPage() {
   const [passcodeError, setPasscodeError] = useState('')
   const [announcement, setAnnouncement] = useState('')
   const [announcementType, setAnnouncementType] = useState<'info' | 'warning' | 'success'>('info')
-  const [currentAnnouncement, setCurrentAnnouncement] = useState<string | null>(null)
+  const [currentAnnouncement, setCurrentAnnouncement] = useState<{message: string, type: string, enabled: boolean} | null>(null)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [generatedJSON, setGeneratedJSON] = useState('')
+  const [copySuccess, setCopySuccess] = useState(false)
 
   useEffect(() => {
     // Check if already authenticated this session
@@ -22,16 +25,23 @@ export default function AdminPage() {
       setIsAuthenticated(true)
     }
 
-    // Load current announcement
-    const saved = localStorage.getItem('forsyth-announcement')
-    if (saved) {
+    // Load current announcement from public JSON
+    const loadCurrentAnnouncement = async () => {
       try {
-        const parsed = JSON.parse(saved)
-        setCurrentAnnouncement(parsed.message)
+        const response = await fetch(withBasePath('/announcement.json'), {
+          cache: 'no-store'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.enabled && data.message) {
+            setCurrentAnnouncement(data)
+          }
+        }
       } catch {
         // Ignore
       }
     }
+    loadCurrentAnnouncement()
   }, [])
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
@@ -54,19 +64,47 @@ export default function AdminPage() {
       message: announcement.trim(),
       type: announcementType,
       timestamp: Date.now(),
-      id: Math.random().toString(36).substring(7)
+      id: Math.random().toString(36).substring(7) + Date.now().toString(36),
+      enabled: true
     }
 
-    localStorage.setItem('forsyth-announcement', JSON.stringify(announcementData))
-    setCurrentAnnouncement(announcement.trim())
+    const jsonContent = JSON.stringify(announcementData, null, 2)
+    setGeneratedJSON(jsonContent)
     setSubmitStatus('success')
-    setAnnouncement('')
+  }
 
-    setTimeout(() => setSubmitStatus('idle'), 3000)
+  const handleCopyJSON = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedJSON)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch {
+      // Ignore
+    }
+  }
+
+  const handleDownloadJSON = () => {
+    const blob = new Blob([generatedJSON], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'announcement.json'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const clearAnnouncement = () => {
-    localStorage.removeItem('forsyth-announcement')
+    const emptyAnnouncement = {
+      message: '',
+      type: 'info',
+      timestamp: 0,
+      id: '',
+      enabled: false
+    }
+    const jsonContent = JSON.stringify(emptyAnnouncement, null, 2)
+    setGeneratedJSON(jsonContent)
     setCurrentAnnouncement(null)
     setSubmitStatus('idle')
   }
@@ -153,7 +191,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Bell className="w-5 h-5 text-primary" />
-            Current Announcement
+            Current Active Announcement
           </h2>
           {currentAnnouncement && (
             <button
@@ -161,14 +199,15 @@ export default function AdminPage() {
               className="px-3 py-1.5 text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors flex items-center gap-2"
             >
               <Trash2 className="w-4 h-4" />
-              Clear
+              Disable
             </button>
           )}
         </div>
 
         {currentAnnouncement ? (
           <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-            <p className="text-foreground">{currentAnnouncement}</p>
+            <p className="text-foreground">{currentAnnouncement.message}</p>
+            <p className="text-xs text-muted-foreground mt-2">Type: {currentAnnouncement.type}</p>
           </div>
         ) : (
           <p className="text-muted-foreground text-sm italic">No active announcement</p>
@@ -242,9 +281,49 @@ export default function AdminPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-center"
+                className="space-y-4"
               >
-                Announcement broadcasted successfully!
+                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-center">
+                  JSON generated successfully! Copy or download the content below.
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-foreground">
+                      Generated JSON (Copy this to /public/announcement.json)
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyJSON}
+                        className="px-3 py-1.5 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        {copySuccess ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copySuccess ? 'Copied!' : 'Copy'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownloadJSON}
+                        className="px-3 py-1.5 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                  <pre className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground text-sm overflow-x-auto">
+                    {generatedJSON}
+                  </pre>
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm">
+                    <p className="font-semibold mb-1">📝 Instructions:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-xs">
+                      <li>Copy the JSON content above</li>
+                      <li>Update /public/announcement.json with this content</li>
+                      <li>Commit and push to the repository</li>
+                      <li>The announcement will appear for all users after deployment</li>
+                    </ol>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

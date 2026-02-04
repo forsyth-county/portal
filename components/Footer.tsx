@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Github, Heart, Gamepad2, Shield, FileText, Sparkles } from 'lucide-react'
+import { Heart, Gamepad2, Shield, FileText, Sparkles } from 'lucide-react'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()

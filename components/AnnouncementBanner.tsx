@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, X, Info, AlertTriangle, CheckCircle } from 'lucide-react'
+import { withBasePath } from '@/lib/utils'
 
 interface AnnouncementData {
   message: string
   type: 'info' | 'warning' | 'success'
   timestamp: number
   id: string
+  enabled: boolean
 }
 
 export function AnnouncementBanner() {
@@ -16,64 +18,66 @@ export function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
 
-  useEffect(() => {
-    const checkAnnouncement = () => {
-      const saved = localStorage.getItem('forsyth-announcement')
-      const dismissedId = sessionStorage.getItem('forsyth-announcement-dismissed')
-      
-      if (saved) {
-        try {
-          const parsed: AnnouncementData = JSON.parse(saved)
-          
-          // Don't show if already dismissed this session
-          if (dismissedId === parsed.id) {
-            return
-          }
-          
-          setAnnouncement(parsed)
-          setIsVisible(true)
-          setIsDismissed(false)
-          
-          // Auto-dismiss after 6 seconds
-          const timer = setTimeout(() => {
-            handleDismiss(parsed.id)
-          }, 6000)
-          
-          return () => clearTimeout(timer)
-        } catch {
-          // Ignore parse errors
-        }
-      }
-    }
-
-    // Check on mount
-    checkAnnouncement()
-
-    // Also listen for storage changes (for real-time updates when admin posts)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'forsyth-announcement') {
-        checkAnnouncement()
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Poll for changes every 5 seconds (for same-tab updates)
-    const pollInterval = setInterval(checkAnnouncement, 5000)
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(pollInterval)
-    }
-  }, [])
-
-  const handleDismiss = (id?: string) => {
+  const handleDismiss = useCallback((id?: string) => {
     setIsVisible(false)
     setIsDismissed(true)
     if (id || announcement?.id) {
       sessionStorage.setItem('forsyth-announcement-dismissed', id || announcement?.id || '')
     }
-  }
+  }, [announcement?.id])
+
+  useEffect(() => {
+    const checkAnnouncement = async () => {
+      try {
+        // Fetch announcement from public JSON file
+        const response = await fetch(withBasePath('/announcement.json'), {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          }
+        })
+        
+        if (!response.ok) return
+        
+        const data: AnnouncementData = await response.json()
+        
+        // Only show if enabled and has content
+        if (!data.enabled || !data.message || !data.id) {
+          setIsVisible(false)
+          return
+        }
+        
+        // Check if already dismissed this session
+        const dismissedId = sessionStorage.getItem('forsyth-announcement-dismissed')
+        if (dismissedId === data.id) {
+          return
+        }
+        
+        setAnnouncement(data)
+        setIsVisible(true)
+        setIsDismissed(false)
+        
+        // Auto-dismiss after 6 seconds
+        const timer = setTimeout(() => {
+          handleDismiss(data.id)
+        }, 6000)
+        
+        return () => clearTimeout(timer)
+      } catch {
+        // Ignore fetch errors
+      }
+    }
+
+    // Check on mount
+    checkAnnouncement()
+    
+    // Poll for changes every 30 seconds
+    const pollInterval = setInterval(checkAnnouncement, 30000)
+
+    return () => {
+      clearInterval(pollInterval)
+    }
+  }, [handleDismiss])
 
   const getIcon = () => {
     switch (announcement?.type) {
