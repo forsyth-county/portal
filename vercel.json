@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://forsyth-game.github.io/portal/$1",
+      "permanent": true
+    }
+  ]
+}
