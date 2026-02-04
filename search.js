@@ -14,20 +14,26 @@ function createItemElement(item) {
     }
     
     card.innerHTML = `
-        <div class="game-icon">${item.icon || '🎮'}</div>
+        <div class="game-icon" title="${item.name}">${item.icon || '🎮'}</div>
         <div class="game-info">
-            <h3 class="game-title">${item.name}</h3>
-            <span class="game-category">${item.category || 'Game'}</span>
+            <h3 class="game-title">${item.icon || '🎮'}</h3>
+            <span class="game-category">${item.name}</span>
         </div>
         <div class="play-button">
             <i class="fas fa-play"></i>
         </div>
     `;
-    
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', item.name);
     card.addEventListener('click', () => {
-        openItem(item.url + '?login.live.com');
+        window.open(item.url + '?login.live.com', '_blank');
     });
-    
+    card.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            window.open(item.url + '?login.live.com', '_blank');
+        }
+    });
     return card;
 }
 
