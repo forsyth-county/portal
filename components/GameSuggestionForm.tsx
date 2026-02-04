@@ -25,7 +25,6 @@ export function GameSuggestionForm() {
     const formData = new FormData(event.target as HTMLFormElement)
     formData.append("access_key", "e93c5755-8acb-4e64-872b-2ba9d3b00e54")
     formData.append("h-captcha-response", captchaToken)
-    formData.append("botcheck", captchaToken)
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
@@ -69,32 +68,33 @@ export function GameSuggestionForm() {
       </p>
 
       <form onSubmit={onSubmit} className="space-y-4 mt-6">
+        {/* Honeypot field - must be hidden and empty */}
+        <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+        
         <div className="space-y-2">
           <label htmlFor="name" className="block text-sm font-medium text-foreground">
-            Your Name
+            Your Name <span className="text-muted-foreground text-xs">(optional)</span>
           </label>
           <input
             type="text"
             id="name"
             name="name"
-            required
             className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder-muted-foreground transition-all"
-            placeholder="Enter your name"
+            placeholder="Enter your name (optional)"
             disabled={isSubmitting}
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-foreground">
-            Email Address
+            Email Address <span className="text-muted-foreground text-xs">(optional)</span>
           </label>
           <input
             type="email"
             id="email"
             name="email"
-            required
             className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder-muted-foreground transition-all"
-            placeholder="your.email@example.com"
+            placeholder="your.email@example.com (optional)"
             disabled={isSubmitting}
           />
         </div>
