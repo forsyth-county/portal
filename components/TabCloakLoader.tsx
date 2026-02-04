@@ -71,13 +71,13 @@ export function TabCloakLoader() {
   useEffect(() => {
     applyCloak()
     
-    // Small delay to override Next.js metadata changes
-    const timeoutId = setTimeout(applyCloak, 50)
-    const timeoutId2 = setTimeout(applyCloak, 150)
+    // Small delays to override Next.js metadata changes after navigation
+    const initialCloakTimeout = setTimeout(applyCloak, 50)
+    const secondaryCloakTimeout = setTimeout(applyCloak, 150)
     
     return () => {
-      clearTimeout(timeoutId)
-      clearTimeout(timeoutId2)
+      clearTimeout(initialCloakTimeout)
+      clearTimeout(secondaryCloakTimeout)
     }
   }, [pathname, applyCloak])
 
