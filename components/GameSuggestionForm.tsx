@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Gamepad2 } from 'lucide-react'
 
-const FORM_COOLDOWN_MS = 60000 // 60 seconds
+const FORM_COOLDOWN_MS = 60 * 60 * 1000 // 60 minutes
 
 export function GameSuggestionForm() {
   const [result, setResult] = useState("")
