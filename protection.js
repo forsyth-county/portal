@@ -4,7 +4,6 @@
  */
 (function() {
     'use strict';
-
     // ========================================
     // BLOCKED DOMAINS - Monitoring Software
     // ========================================
@@ -52,7 +51,6 @@
         'fortigate.com',
         'fortinet.com'
     ];
-
     // Check if a URL matches blocked domains
     function isBlockedDomain(url) {
         if (!url) return false;
@@ -66,7 +64,6 @@
             return false;
         }
     }
-
     // ========================================
     // WEBRTC BLOCKING
     // ========================================
@@ -74,52 +71,40 @@
         // Block RTCPeerConnection
         if (window.RTCPeerConnection) {
             window.RTCPeerConnection = function() {
-                console.log('[Protection] RTCPeerConnection blocked');
                 throw new Error('WebRTC is disabled');
             };
         }
-
         // Block webkitRTCPeerConnection (older browsers)
         if (window.webkitRTCPeerConnection) {
             window.webkitRTCPeerConnection = function() {
-                console.log('[Protection] webkitRTCPeerConnection blocked');
                 throw new Error('WebRTC is disabled');
             };
         }
-
         // Block mozRTCPeerConnection (Firefox)
         if (window.mozRTCPeerConnection) {
             window.mozRTCPeerConnection = function() {
-                console.log('[Protection] mozRTCPeerConnection blocked');
                 throw new Error('WebRTC is disabled');
             };
         }
-
         // Block RTCDataChannel
         if (window.RTCDataChannel) {
             window.RTCDataChannel = function() {
-                console.log('[Protection] RTCDataChannel blocked');
                 throw new Error('WebRTC is disabled');
             };
         }
-
         // Block RTCSessionDescription
         if (window.RTCSessionDescription) {
             window.RTCSessionDescription = function() {
-                console.log('[Protection] RTCSessionDescription blocked');
                 throw new Error('WebRTC is disabled');
             };
         }
-
         // Block RTCIceCandidate
         if (window.RTCIceCandidate) {
             window.RTCIceCandidate = function() {
-                console.log('[Protection] RTCIceCandidate blocked');
                 throw new Error('WebRTC is disabled');
             };
         }
     }
-
     // ========================================
     // SCREEN CAPTURE BLOCKING
     // ========================================
@@ -128,10 +113,8 @@
         if (navigator.mediaDevices) {
             const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
             navigator.mediaDevices.getDisplayMedia = function() {
-                console.log('[Protection] getDisplayMedia blocked');
                 return Promise.reject(new Error('Screen capture is disabled'));
             };
-
             // Also block getUserMedia for screen capture
             const originalGetUserMedia = navigator.mediaDevices.getUserMedia;
             navigator.mediaDevices.getUserMedia = function(constraints) {
@@ -142,13 +125,11 @@
                     constraints.video.displaySurface ||
                     constraints.video.cursor
                 ))) {
-                    console.log('[Protection] Screen capture via getUserMedia blocked');
                     return Promise.reject(new Error('Screen capture is disabled'));
                 }
                 return originalGetUserMedia.call(this, constraints);
             };
         }
-
         // Block legacy getUserMedia
         if (navigator.getUserMedia) {
             const originalLegacyGetUserMedia = navigator.getUserMedia;
@@ -157,37 +138,35 @@
                     constraints.video.mediaSource === 'screen' ||
                     constraints.video.mediaSource === 'window'
                 )) {
-                    console.log('[Protection] Legacy screen capture blocked');
                     if (errorCallback) errorCallback(new Error('Screen capture is disabled'));
                     return;
                 }
                 return originalLegacyGetUserMedia.call(this, constraints, successCallback, errorCallback);
             };
         }
-
         // Block webkitGetUserMedia
         if (navigator.webkitGetUserMedia) {
+            const originalWebkitGetUserMedia = navigator.webkitGetUserMedia;
             navigator.webkitGetUserMedia = function(constraints, successCallback, errorCallback) {
                 if (constraints && constraints.video && constraints.video.mediaSource) {
-                    console.log('[Protection] Webkit screen capture blocked');
                     if (errorCallback) errorCallback(new Error('Screen capture is disabled'));
                     return;
                 }
+                return originalWebkitGetUserMedia.call(this, constraints, successCallback, errorCallback);
             };
         }
-
         // Block mozGetUserMedia
         if (navigator.mozGetUserMedia) {
+            const originalMozGetUserMedia = navigator.mozGetUserMedia;
             navigator.mozGetUserMedia = function(constraints, successCallback, errorCallback) {
                 if (constraints && constraints.video && constraints.video.mediaSource) {
-                    console.log('[Protection] Mozilla screen capture blocked');
                     if (errorCallback) errorCallback(new Error('Screen capture is disabled'));
                     return;
                 }
+                return originalMozGetUserMedia.call(this, constraints, successCallback, errorCallback);
             };
         }
     }
-
     // ========================================
     // CANVAS/SCREENSHOT PROTECTION
     // ========================================
@@ -199,63 +178,80 @@
             const result = originalToDataURL.apply(this, arguments);
             return result;
         };
-
         // Protect canvas toBlob
         const originalToBlob = HTMLCanvasElement.prototype.toBlob;
         HTMLCanvasElement.prototype.toBlob = function(callback, type, quality) {
             return originalToBlob.apply(this, arguments);
         };
-
         // Block html2canvas-style screenshot attempts via getImageData
         const originalGetImageData = CanvasRenderingContext2D.prototype.getImageData;
         CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {
             // Check if this looks like a full-page screenshot attempt
             if (sw > 1000 && sh > 1000) {
-                console.log('[Protection] Large canvas capture detected');
             }
             return originalGetImageData.apply(this, arguments);
         };
     }
-
     // ========================================
     // NETWORK REQUEST BLOCKING
     // ========================================
+    // Telemetry patterns to block
+    const telemetryPatterns = [
+        /telemetry/i,
+        /analytics/i,
+        /tracking/i,
+        /beacon/i,
+        /metrics/i,
+        /monitor/i,
+        /capture/i,
+        /screenshot/i,
+        /screenrecord/i,
+        /activity/i
+    ];
+    function shouldBlockUrl(url) {
+        if (!url) return false;
+        // Check if URL matches blocked domains
+        if (isBlockedDomain(url)) return true;
+        // Check for telemetry patterns (only for external URLs)
+        try {
+            const urlObj = new URL(url, window.location.origin);
+            if (urlObj.hostname !== window.location.hostname) {
+                for (const pattern of telemetryPatterns) {
+                    if (pattern.test(url)) return true;
+                }
+            }
+        } catch {}
+        return false;
+    }
     function blockNetworkRequests() {
-        // Override fetch to block requests to monitoring domains
+        // Override fetch to block requests to monitoring domains and telemetry
         const originalFetch = window.fetch;
         window.fetch = function(resource, init) {
             const url = typeof resource === 'string' ? resource : resource.url;
-            if (isBlockedDomain(url)) {
-                console.log('[Protection] Blocked fetch to:', url);
+            if (shouldBlockUrl(url)) {
                 return Promise.reject(new Error('Request blocked'));
             }
             return originalFetch.apply(this, arguments);
         };
-
         // Override XMLHttpRequest
         const originalXHROpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function(method, url) {
-            if (isBlockedDomain(url)) {
-                console.log('[Protection] Blocked XHR to:', url);
+            if (shouldBlockUrl(url)) {
                 this._blocked = true;
             }
             return originalXHROpen.apply(this, arguments);
         };
-
         const originalXHRSend = XMLHttpRequest.prototype.send;
         XMLHttpRequest.prototype.send = function() {
             if (this._blocked) {
-                console.log('[Protection] XHR send blocked');
                 return;
             }
             return originalXHRSend.apply(this, arguments);
         };
-
         // Block WebSocket connections to monitoring domains
         const OriginalWebSocket = window.WebSocket;
         window.WebSocket = function(url, protocols) {
-            if (isBlockedDomain(url)) {
-                console.log('[Protection] Blocked WebSocket to:', url);
+            if (shouldBlockUrl(url)) {
                 throw new Error('WebSocket connection blocked');
             }
             return new OriginalWebSocket(url, protocols);
@@ -265,33 +261,28 @@
         window.WebSocket.OPEN = OriginalWebSocket.OPEN;
         window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
         window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
-
         // Block EventSource (Server-Sent Events) to monitoring domains
         if (window.EventSource) {
             const OriginalEventSource = window.EventSource;
             window.EventSource = function(url, eventSourceInitDict) {
-                if (isBlockedDomain(url)) {
-                    console.log('[Protection] Blocked EventSource to:', url);
+                if (shouldBlockUrl(url)) {
                     throw new Error('EventSource connection blocked');
                 }
                 return new OriginalEventSource(url, eventSourceInitDict);
             };
             window.EventSource.prototype = OriginalEventSource.prototype;
         }
-
         // Block Beacon API to monitoring domains
         if (navigator.sendBeacon) {
             const originalSendBeacon = navigator.sendBeacon;
             navigator.sendBeacon = function(url, data) {
-                if (isBlockedDomain(url)) {
-                    console.log('[Protection] Blocked beacon to:', url);
+                if (shouldBlockUrl(url)) {
                     return false;
                 }
                 return originalSendBeacon.apply(this, arguments);
             };
         }
     }
-
     // ========================================
     // IMAGE/SCRIPT LOADING PROTECTION
     // ========================================
@@ -299,9 +290,10 @@
         // Block images from monitoring domains
         const originalImageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
         Object.defineProperty(HTMLImageElement.prototype, 'src', {
+            configurable: true,
+            enumerable: true,
             set: function(value) {
                 if (isBlockedDomain(value)) {
-                    console.log('[Protection] Blocked image from:', value);
                     return;
                 }
                 return originalImageSrc.set.call(this, value);
@@ -310,14 +302,14 @@
                 return originalImageSrc.get.call(this);
             }
         });
-
         // Block scripts from monitoring domains
         const originalScriptSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
         if (originalScriptSrc) {
             Object.defineProperty(HTMLScriptElement.prototype, 'src', {
+                configurable: true,
+                enumerable: true,
                 set: function(value) {
                     if (isBlockedDomain(value)) {
-                        console.log('[Protection] Blocked script from:', value);
                         return;
                     }
                     return originalScriptSrc.set.call(this, value);
@@ -327,7 +319,6 @@
                 }
             });
         }
-
         // Monitor DOM for injected elements
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
@@ -335,43 +326,40 @@
                     if (node.nodeType === 1) { // Element node
                         // Check iframes
                         if (node.tagName === 'IFRAME' && isBlockedDomain(node.src)) {
-                            console.log('[Protection] Removed blocked iframe:', node.src);
                             node.remove();
                         }
                         // Check scripts
                         if (node.tagName === 'SCRIPT' && isBlockedDomain(node.src)) {
-                            console.log('[Protection] Removed blocked script:', node.src);
                             node.remove();
                         }
                         // Check links (stylesheets, etc.)
                         if (node.tagName === 'LINK' && isBlockedDomain(node.href)) {
-                            console.log('[Protection] Removed blocked link:', node.href);
                             node.remove();
                         }
                     }
                 });
             });
         });
-
         observer.observe(document.documentElement || document.body || document, {
             childList: true,
             subtree: true
         });
     }
-
     // ========================================
     // VISIBILITY/FOCUS EVENT PROTECTION
     // ========================================
     function protectVisibilityEvents() {
         // Spoof document visibility state
         Object.defineProperty(document, 'visibilityState', {
+            configurable: true,
+            enumerable: true,
             get: function() { return 'visible'; }
         });
-
         Object.defineProperty(document, 'hidden', {
+            configurable: true,
+            enumerable: true,
             get: function() { return false; }
         });
-
         // Block visibility change events from being detected
         const originalAddEventListener = EventTarget.prototype.addEventListener;
         EventTarget.prototype.addEventListener = function(type, listener, options) {
@@ -381,14 +369,11 @@
             }
             return originalAddEventListener.call(this, type, listener, options);
         };
-
         // Spoof hasFocus
-        const originalHasFocus = document.hasFocus;
         document.hasFocus = function() {
             return true;
         };
     }
-
     // ========================================
     // EXTENSION COMMUNICATION BLOCKING
     // ========================================
@@ -396,61 +381,28 @@
         // Block chrome.runtime messages to extensions
         if (window.chrome && window.chrome.runtime) {
             window.chrome.runtime.sendMessage = function() {
-                console.log('[Protection] Blocked chrome.runtime.sendMessage');
                 return Promise.reject(new Error('Blocked'));
             };
             window.chrome.runtime.connect = function() {
-                console.log('[Protection] Blocked chrome.runtime.connect');
-                return { postMessage: function() {}, disconnect: function() {}, onMessage: { addListener: function() {} } };
+                return { 
+                    postMessage: function() {}, 
+                    disconnect: function() {}, 
+                    onMessage: { addListener: function() {}, removeListener: function() {}, hasListener: function() { return false; } },
+                    onDisconnect: { addListener: function() {}, removeListener: function() {}, hasListener: function() { return false; } },
+                    name: '',
+                    sender: undefined
+                };
             };
         }
-
         // Block postMessage to parent/opener if from monitoring domain
         const originalPostMessage = window.postMessage;
         window.postMessage = function(message, targetOrigin, transfer) {
             if (isBlockedDomain(targetOrigin)) {
-                console.log('[Protection] Blocked postMessage to:', targetOrigin);
                 return;
             }
             return originalPostMessage.apply(this, arguments);
         };
     }
-
-    // ========================================
-    // TELEMETRY/ANALYTICS BLOCKING
-    // ========================================
-    function blockTelemetry() {
-        // Block common analytics/telemetry endpoints
-        const telemetryPatterns = [
-            /telemetry/i,
-            /analytics/i,
-            /tracking/i,
-            /beacon/i,
-            /metrics/i,
-            /monitor/i,
-            /capture/i,
-            /screenshot/i,
-            /screenrecord/i,
-            /activity/i
-        ];
-
-        // Additional fetch blocking for telemetry
-        const enhancedFetch = window.fetch;
-        window.fetch = function(resource, init) {
-            const url = typeof resource === 'string' ? resource : (resource.url || '');
-            
-            // Check for telemetry patterns
-            for (const pattern of telemetryPatterns) {
-                if (pattern.test(url) && !url.includes(window.location.hostname)) {
-                    console.log('[Protection] Blocked telemetry request:', url);
-                    return Promise.reject(new Error('Telemetry blocked'));
-                }
-            }
-            
-            return enhancedFetch.apply(this, arguments);
-        };
-    }
-
     // ========================================
     // SCREEN RECORDING DETECTION
     // ========================================
@@ -465,7 +417,6 @@
                     for (const track of tracks) {
                         const settings = track.getSettings ? track.getSettings() : {};
                         if (settings.displaySurface || track.label.toLowerCase().includes('screen')) {
-                            console.log('[Protection] Blocked screen recording attempt');
                             throw new Error('Screen recording is disabled');
                         }
                     }
@@ -476,11 +427,13 @@
             window.MediaRecorder.isTypeSupported = OriginalMediaRecorder.isTypeSupported;
         }
     }
-
     // ========================================
     // INITIALIZE PROTECTION
     // ========================================
+    let initialized = false;
     function initProtection() {
+        if (initialized) return;
+        initialized = true;
         try {
             blockWebRTC();
             blockScreenCapture();
@@ -489,24 +442,15 @@
             blockResourceLoading();
             protectVisibilityEvents();
             blockExtensionCommunication();
-            blockTelemetry();
             detectAndBlockRecording();
-            console.log('[Protection] All protections initialized');
         } catch (e) {
-            console.error('[Protection] Error initializing:', e);
+            // Silent fail
         }
     }
-
     // Run immediately
     initProtection();
-
     // Also run on DOMContentLoaded to catch late-loaded scripts
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initProtection);
     }
-
-    // Expose blocked domains list for reference
-    window.__PROTECTION_BLOCKED_DOMAINS = BLOCKED_DOMAINS;
-    window.__PROTECTION_CHECK_DOMAIN = isBlockedDomain;
-
 })();
