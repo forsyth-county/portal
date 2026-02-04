@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Navigation } from '@/components/Navigation'
+import { TabCloakLoader } from '@/components/TabCloakLoader'
 
 export const metadata: Metadata = {
   title: 'Forsyth Games Portal',
@@ -24,6 +25,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans min-h-screen" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
         <div className="fixed inset-0 bg-gradient-cosmic -z-10" />
+        <TabCloakLoader />
         <Navigation />
         <main className="pt-24 pb-12 px-4">
           {children}
