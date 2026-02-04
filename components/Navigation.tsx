@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Hexagon } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -14,14 +14,50 @@ const navItems = [
   { name: 'Settings', href: '/settings' },
 ]
 
+const SCROLL_TOP_THRESHOLD = 10
+const SCROLL_HIDE_THRESHOLD = 100
+
 export function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
+
+  // Hide navbar on /play routes
+  const isPlayPage = pathname?.startsWith('/play/')
+
+  useEffect(() => {
+    if (isPlayPage) return // Don't attach scroll listener on play pages
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      // Show navbar when scrolling up or at top, hide when scrolling down
+      if (currentScrollY < lastScrollY || currentScrollY < SCROLL_TOP_THRESHOLD) {
+        setIsVisible(true)
+      } else if (currentScrollY > lastScrollY && currentScrollY > SCROLL_HIDE_THRESHOLD) {
+        setIsVisible(false)
+      }
+      
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY, isPlayPage])
+
+  // Don't render navbar on play pages
+  if (isPlayPage) return null
 
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 hidden md:block">
+      <nav 
+        className={cn(
+          "fixed top-6 left-1/2 -translate-x-1/2 z-50 hidden md:block transition-all duration-300",
+          isVisible ? "translate-y-0 opacity-100" : "-translate-y-24 opacity-0"
+        )}
+      >
         <div className="glass border border-border rounded-full px-8 py-3 shadow-2xl">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
@@ -50,7 +86,12 @@ export function Navigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 md:hidden">
+      <nav 
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 md:hidden transition-all duration-300",
+          isVisible ? "translate-y-0" : "-translate-y-full"
+        )}
+      >
         <div className="glass border-b border-border px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 text-primary">

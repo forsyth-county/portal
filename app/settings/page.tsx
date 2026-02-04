@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Settings as SettingsIcon, Info } from 'lucide-react'
+import { TabCloak } from '@/components/TabCloak'
 
 export default function SettingsPage() {
   return (
@@ -25,6 +26,9 @@ export default function SettingsPage() {
 
       {/* Settings Sections */}
       <div className="space-y-6">
+        {/* Tab Cloaking Section */}
+        <TabCloak />
+
         {/* About Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
