@@ -8,7 +8,7 @@ function createItemElement(item) {
     const a = document.createElement('a');
     a.className = 'item';
     // Apply hoverable class if animations are enabled
-    if (localStorage.getItem('celestrium-animations') !== 'false') {
+    if (localStorage.getItem('forsyth-animations') !== 'false') {
         a.classList.add('hoverable');
     }
     a.href = '#';
