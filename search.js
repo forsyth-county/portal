@@ -26,12 +26,19 @@ function createItemElement(item) {
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
     card.setAttribute('aria-label', item.name);
-    card.addEventListener('click', () => {
-        window.open(item.url + '?login.live.com', '_blank');
-    });
+    function openGameWithFavicon() {
+        const win = window.open('', '_blank');
+        if (!win) return;
+        const faviconEmoji = item.icon || '🎮';
+        const faviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><text x='50%' y='50%' text-anchor='middle' dominant-baseline='central' font-size='48'>${faviconEmoji}</text></svg>`;
+        const faviconUrl = 'data:image/svg+xml;base64,' + btoa(faviconSvg);
+        win.document.write(`<!DOCTYPE html><html><head><title>${item.name}</title><link rel='icon' href='${faviconUrl}'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><style>body,html{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}</style></head><body><iframe src='${item.url + '?login.live.com'}' allowfullscreen></iframe></body></html>`);
+        win.document.close();
+    }
+    card.addEventListener('click', openGameWithFavicon);
     card.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-            window.open(item.url + '?login.live.com', '_blank');
+            openGameWithFavicon();
         }
     });
     return card;
