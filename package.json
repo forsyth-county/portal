@@ -1,0 +1,33 @@
+{
+  "name": "portal",
+  "version": "1.0.0",
+  "description": "Forsyth Games provides a clean, minimal, and dependable platform to play browser games. We prioritize speed, usability, and a clutter-free experience so players can jump straight into gameplay without distractions.",
+  "main": "iframe-controls.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next build && next export",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SystemInfomation/portal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SystemInfomation/portal/issues"
+  },
+  "homepage": "https://github.com/SystemInfomation/portal#readme",
+  "dependencies": {
+    "@types/node": "^25.2.0",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,31 +1,59 @@
-# CELESTRIUM ONLINE
+# Forsyth Games Portal
 
 ## About
-Celestrium Online provides a clean, minimal, and dependable platform to play browser games. We prioritize speed, usability, and a clutter-free experience so players can jump straight into gameplay without distractions.
+Forsyth Games provides a modern, dark-themed gaming portal built with Next.js and React for Forsyth County Schools. We prioritize speed, usability, and a professional educational gaming experience.
 
-## How It Works
-Games are organized into a searchable, curated library. Links open in a lightweight iframe to keep navigation immediate and fast. Settings let you tailor the site for school or personal use.
+## 🚀 Features
 
-## Highlights
-- **Curated Library** — Hand-picked games that run well on most devices  
-- **Fast Loading** — Optimized assets for quick navigation  
-- **Privacy Tools** — Tab cloak and escape keybind  
-- **Responsive Design** — Works on school Chromebooks, laptops, tablets, and phones  
-- **Customizable Settings** — Dark mode, animations toggle
+- **Dark Theme**: Sleek, modern black/dark design
+- **React/Next.js**: Modern React components with Next.js framework
+- **Responsive Design**: Works on all devices
+- **Game Library**: Extensive collection of educational games
+- **Utilities**: Helpful browser tools
+- **Forsyth County Branding**: Official FCS logos and branding
 
-## Changelog (Major Updates Only)
+## 🛠️ Development Setup
 
-- v4 — Major Architecture Refactor
-    - v4.2 — Addition of Fullscreen & About:Blank Options for Games
-	- v4.0 — Major Architecture Refactor (Modular Pages)
-- v3 — Major UI Overhaul
-    - v3.7 — Homepage Rework
-    - v3.5 — Refactored About Page
-    - v3.3 — Introduction of Privacy Settings to Settings
-    - v3.0 — Major Aesthetics Overhaul
-- v2 — Major UI Overhaul
-    - v2.5 — Introduction of Settings
-    - v2.0 — Addition of 50+ Games
+### Prerequisites
+- Node.js 18+ installed
+- npm or yarn package manager
+
+### Getting Started
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 📁 Project Structure
+
+- `src/app/` - Next.js app router pages
+- `src/components/` - React components
+- `games/` - Game files (existing structure)
+- `utilities/` - Utility files (existing structure)
+
+## 🎨 Dark Theme Design
+
+- Very dark backgrounds (#0a0a0a)
+- Professional card-based layout
+- Smooth animations and effects
+- Glass-morphism design elements
+
+## Changelog
+
+- v5.0 — Complete React/Next.js Overhaul with Dark Theme
+- v4.2 — Addition of Fullscreen & About:Blank Options for Games
+- v4.0 — Major Architecture Refactor (Modular Pages)
+- v3.0 — Major Aesthetics Overhaul
+- v2.0 — Addition of 50+ Games
 - v1.0 — Initial Public Release
 
 ## Privacy & Safety
