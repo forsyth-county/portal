@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Globe } from 'lucide-react'
+import Image from 'next/image'
 
 const DEFAULT_FAVICON = 'https://site.imsglobal.org/sites/default/files/orgs/logos/primary/fcslogo_hexagon.png'
 const CLOAK_COOLDOWN_MS = 3000 // 3 seconds
@@ -193,10 +194,13 @@ export function TabCloak() {
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <div className="flex items-center gap-3">
-              <img
+              <Image
                 src={option.icon}
                 alt={option.name}
-                className="w-10 h-10 rounded-lg object-cover"
+                width={40}
+                height={40}
+                className="rounded-lg object-cover"
+                unoptimized
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.src = DEFAULT_FAVICON

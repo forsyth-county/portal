@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, X, Info, AlertTriangle, CheckCircle } from 'lucide-react'
 
@@ -15,6 +15,14 @@ export function AnnouncementBanner() {
   const [announcement, setAnnouncement] = useState<AnnouncementData | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+
+  const handleDismiss = useCallback((id?: string) => {
+    setIsVisible(false)
+    setIsDismissed(true)
+    if (id || announcement?.id) {
+      sessionStorage.setItem('forsyth-announcement-dismissed', id || announcement?.id || '')
+    }
+  }, [announcement?.id])
 
   useEffect(() => {
     const checkAnnouncement = () => {
@@ -65,15 +73,7 @@ export function AnnouncementBanner() {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(pollInterval)
     }
-  }, [])
-
-  const handleDismiss = (id?: string) => {
-    setIsVisible(false)
-    setIsDismissed(true)
-    if (id || announcement?.id) {
-      sessionStorage.setItem('forsyth-announcement-dismissed', id || announcement?.id || '')
-    }
-  }
+  }, [handleDismiss])
 
   const getIcon = () => {
     switch (announcement?.type) {

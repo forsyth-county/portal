@@ -3,8 +3,6 @@
 import { useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 
-const DEFAULT_FAVICON = 'https://site.imsglobal.org/sites/default/files/orgs/logos/primary/fcslogo_hexagon.png'
-
 const CLOAK_OPTIONS = [
   {
     id: 'google-drive',

@@ -2,6 +2,28 @@
 
 import { useEffect } from 'react'
 
+// Type definitions for Window extensions
+interface WindowWithRTC extends Window {
+  RTCPeerConnection?: unknown
+  webkitRTCPeerConnection?: unknown
+  mozRTCPeerConnection?: unknown
+  RTCDataChannel?: unknown
+  RTCSessionDescription?: unknown
+  RTCIceCandidate?: unknown
+  chrome?: {
+    runtime?: {
+      sendMessage?: unknown
+      connect?: unknown
+    }
+  }
+  MediaRecorder?: typeof MediaRecorder
+  WebSocket: typeof WebSocket
+}
+
+interface XMLHttpRequestWithBlocked extends XMLHttpRequest {
+  _blocked?: boolean
+}
+
 /**
  * Blocked monitoring domains
  */
@@ -116,23 +138,24 @@ function initProtection(): void {
       throw new Error('WebRTC is disabled')
     }
     
-    if ((window as any).RTCPeerConnection) {
-      (window as any).RTCPeerConnection = blockedRTC
+    const win = window as WindowWithRTC
+    if (win.RTCPeerConnection) {
+      win.RTCPeerConnection = blockedRTC as unknown as typeof RTCPeerConnection
     }
-    if ((window as any).webkitRTCPeerConnection) {
-      (window as any).webkitRTCPeerConnection = blockedRTC
+    if (win.webkitRTCPeerConnection) {
+      win.webkitRTCPeerConnection = blockedRTC
     }
-    if ((window as any).mozRTCPeerConnection) {
-      (window as any).mozRTCPeerConnection = blockedRTC
+    if (win.mozRTCPeerConnection) {
+      win.mozRTCPeerConnection = blockedRTC
     }
-    if ((window as any).RTCDataChannel) {
-      (window as any).RTCDataChannel = blockedRTC
+    if (win.RTCDataChannel) {
+      win.RTCDataChannel = blockedRTC
     }
-    if ((window as any).RTCSessionDescription) {
-      (window as any).RTCSessionDescription = blockedRTC
+    if (win.RTCSessionDescription) {
+      win.RTCSessionDescription = blockedRTC as unknown as typeof RTCSessionDescription
     }
-    if ((window as any).RTCIceCandidate) {
-      (window as any).RTCIceCandidate = blockedRTC
+    if (win.RTCIceCandidate) {
+      win.RTCIceCandidate = blockedRTC as unknown as typeof RTCIceCandidate
     }
   }
 
@@ -148,7 +171,11 @@ function initProtection(): void {
       const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
       navigator.mediaDevices.getUserMedia = function(constraints: MediaStreamConstraints) {
         if (constraints?.video && typeof constraints.video === 'object') {
-          const videoConstraints = constraints.video as any
+          const videoConstraints = constraints.video as MediaTrackConstraints & {
+            mediaSource?: string
+            displaySurface?: string
+            cursor?: string
+          }
           if (
             videoConstraints.mediaSource === 'screen' ||
             videoConstraints.mediaSource === 'window' ||
@@ -180,17 +207,17 @@ function initProtection(): void {
 
     // Override XMLHttpRequest
     const originalXHROpen = XMLHttpRequest.prototype.open
-    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...args: any[]) {
+    XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, method: string, url: string | URL, async: boolean = true, username?: string | null, password?: string | null) {
       const urlString = url instanceof URL ? url.href : url
       if (shouldBlockUrl(urlString)) {
-        (this as any)._blocked = true
+        (this as XMLHttpRequestWithBlocked)._blocked = true
       }
-      return originalXHROpen.apply(this, [method, url, ...args] as any)
+      return originalXHROpen.call(this, method, url, async, username, password)
     }
 
     const originalXHRSend = XMLHttpRequest.prototype.send
     XMLHttpRequest.prototype.send = function(body?: Document | XMLHttpRequestBodyInit | null) {
-      if ((this as any)._blocked) {
+      if ((this as XMLHttpRequestWithBlocked)._blocked) {
         return
       }
       return originalXHRSend.call(this, body)
@@ -198,18 +225,20 @@ function initProtection(): void {
 
     // Block WebSocket
     const OriginalWebSocket = window.WebSocket
-    ;(window as any).WebSocket = function(url: string | URL, protocols?: string | string[]) {
+    const win = window as WindowWithRTC
+    win.WebSocket = function(this: typeof WebSocket, url: string | URL, protocols?: string | string[]) {
       const urlString = url instanceof URL ? url.href : url
       if (shouldBlockUrl(urlString)) {
         throw new Error('WebSocket connection blocked')
       }
       return new OriginalWebSocket(url, protocols)
-    }
-    ;(window as any).WebSocket.prototype = OriginalWebSocket.prototype
-    ;(window as any).WebSocket.CONNECTING = OriginalWebSocket.CONNECTING
-    ;(window as any).WebSocket.OPEN = OriginalWebSocket.OPEN
-    ;(window as any).WebSocket.CLOSING = OriginalWebSocket.CLOSING
-    ;(window as any).WebSocket.CLOSED = OriginalWebSocket.CLOSED
+    } as unknown as typeof WebSocket
+    Object.setPrototypeOf(win.WebSocket, OriginalWebSocket)
+    win.WebSocket.prototype = OriginalWebSocket.prototype
+    Object.defineProperty(win.WebSocket, 'CONNECTING', { value: OriginalWebSocket.CONNECTING })
+    Object.defineProperty(win.WebSocket, 'OPEN', { value: OriginalWebSocket.OPEN })
+    Object.defineProperty(win.WebSocket, 'CLOSING', { value: OriginalWebSocket.CLOSING })
+    Object.defineProperty(win.WebSocket, 'CLOSED', { value: OriginalWebSocket.CLOSED })
 
     // Block Beacon API
     if (navigator.sendBeacon) {
@@ -247,16 +276,21 @@ function initProtection(): void {
   // EXTENSION COMMUNICATION BLOCKING
   // ========================================
   const blockExtensions = () => {
-    if ((window as any).chrome?.runtime) {
-      (window as any).chrome.runtime.sendMessage = () => Promise.reject(new Error('Blocked'))
-      ;(window as any).chrome.runtime.connect = () => ({
-        postMessage: () => {},
-        disconnect: () => {},
-        onMessage: { addListener: () => {}, removeListener: () => {}, hasListener: () => false },
-        onDisconnect: { addListener: () => {}, removeListener: () => {}, hasListener: () => false },
-        name: '',
-        sender: undefined
-      })
+    const win = window as WindowWithRTC
+    if (win.chrome?.runtime) {
+      if (win.chrome.runtime.sendMessage) {
+        win.chrome.runtime.sendMessage = () => Promise.reject(new Error('Blocked'))
+      }
+      if (win.chrome.runtime.connect) {
+        win.chrome.runtime.connect = () => ({
+          postMessage: () => {},
+          disconnect: () => {},
+          onMessage: { addListener: () => {}, removeListener: () => {}, hasListener: () => false },
+          onDisconnect: { addListener: () => {}, removeListener: () => {}, hasListener: () => false },
+          name: '',
+          sender: undefined
+        })
+      }
     }
   }
 
@@ -295,20 +329,23 @@ function initProtection(): void {
   const blockRecording = () => {
     if (window.MediaRecorder) {
       const OriginalMediaRecorder = window.MediaRecorder
-      ;(window as any).MediaRecorder = function(stream: MediaStream, options?: MediaRecorderOptions) {
+      const win = window as WindowWithRTC
+      win.MediaRecorder = function(this: typeof MediaRecorder, stream: MediaStream, options?: MediaRecorderOptions) {
         if (stream?.getVideoTracks) {
           const tracks = stream.getVideoTracks()
           for (const track of tracks) {
             const settings = track.getSettings?.() || {}
-            if ((settings as any).displaySurface || track.label.toLowerCase().includes('screen')) {
+            const extendedSettings = settings as MediaTrackSettings & { displaySurface?: string }
+            if (extendedSettings.displaySurface || track.label.toLowerCase().includes('screen')) {
               throw new Error('Screen recording is disabled')
             }
           }
         }
         return new OriginalMediaRecorder(stream, options)
-      }
-      ;(window as any).MediaRecorder.prototype = OriginalMediaRecorder.prototype
-      ;(window as any).MediaRecorder.isTypeSupported = OriginalMediaRecorder.isTypeSupported
+      } as unknown as typeof MediaRecorder
+      Object.setPrototypeOf(win.MediaRecorder, OriginalMediaRecorder)
+      win.MediaRecorder.prototype = OriginalMediaRecorder.prototype
+      win.MediaRecorder.isTypeSupported = OriginalMediaRecorder.isTypeSupported
     }
   }
 
