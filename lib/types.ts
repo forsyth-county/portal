@@ -12,6 +12,8 @@ export interface Utility {
   description: string
   iconUrl: string
   iframeSrc: string
+  disabled?: boolean
+  disabledReason?: string
 }
 
 export type Category = 

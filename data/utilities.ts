@@ -6,7 +6,9 @@ export const utilities: Utility[] = [
     name: 'About:Blank Proxy',
     description: 'Open sites through a proxy in a blank tab with working links',
     iconUrl: '/utilities/about-blank-cloaker/favicon.png',
-    iframeSrc: '/utilities/about-blank-cloaker/'
+    iframeSrc: '/utilities/about-blank-cloaker/',
+    disabled: true,
+    disabledReason: 'Bugs'
   },
   {
     id: 'ruffle',
