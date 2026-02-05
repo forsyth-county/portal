@@ -4,6 +4,7 @@ import './globals.css'
 import { Navigation } from '@/components/Navigation'
 import { TabCloakLoader } from '@/components/TabCloakLoader'
 import { Protection } from '@/components/Protection'
+import { ScreenPrivacyGuard } from '@/components/ScreenPrivacyGuard'
 import { AnnouncementBanner } from '@/components/AnnouncementBanner'
 import { TosNotification } from '@/components/TosNotification'
 import { TabHider } from '@/components/TabHider'
@@ -59,6 +60,7 @@ export default function RootLayout({
         <GeoLock />
         <TimeBasedAccessControl />
         <Protection />
+        <ScreenPrivacyGuard />
         <TabCloakLoader />
         <TabHider />
         <AnnouncementBanner />
