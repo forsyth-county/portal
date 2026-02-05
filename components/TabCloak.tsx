@@ -114,6 +114,7 @@ export function TabCloak() {
       // Remove all cloak CSS classes
       removeCloakClasses()
       localStorage.removeItem('forsyth-tab-cloak')
+      localStorage.removeItem('forsyth-bg-color') // Clean up legacy key
       localStorage.setItem('forsyth-cloak-last-change', Date.now().toString())
     } else {
       const option = CLOAK_OPTIONS.find(o => o.id === cloakId)

@@ -90,18 +90,18 @@ export default function AdminPage() {
   const [schoolBreakdown, setSchoolBreakdown] = useState(generateSchoolVisitors(generateVisitorCount()))
   const [lastUpdated, setLastUpdated] = useState(new Date())
 
-  // Update analytics every 5 seconds for realistic fluctuation
+  // Update mock analytics every 5 seconds for realistic fluctuation
   useEffect(() => {
     if (!isAuthenticated) return
     
-    const updateAnalytics = () => {
+    const refreshMockAnalytics = () => {
       const newVisitors = generateVisitorCount()
       setCurrentVisitors(newVisitors)
       setSchoolBreakdown(generateSchoolVisitors(newVisitors))
       setLastUpdated(new Date())
     }
     
-    const interval = setInterval(updateAnalytics, 5000)
+    const interval = setInterval(refreshMockAnalytics, 5000)
     return () => clearInterval(interval)
   }, [isAuthenticated])
 
