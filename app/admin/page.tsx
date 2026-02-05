@@ -4,9 +4,6 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, Lock, Send, Trash2, Bell, CheckCircle, AlertTriangle, Copy, Download, Eye, Users, Activity, TrendingUp, RefreshCw, Globe } from 'lucide-react'
 import { withBasePath } from '@/lib/utils'
-import { posthogAPI } from '@/lib/posthog'
-import { googleAnalyticsAPI } from '@/lib/google-analytics'
-import { simpleGA } from '@/lib/ga-realtime-simple'
 
 const ADMIN_PASSCODE = '1140' // Admin passcode
 const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes
@@ -14,17 +11,7 @@ const MAX_LOGIN_ATTEMPTS = 3 // Maximum failed attempts
 const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes lockout
 // Removed IP whitelist to allow access from anywhere
 
-interface AnalyticsData {
-  totalViews: number;
-  activeUsers: number;
-  totalUsers: number;
-  currentSessions: number;
-  lastUpdated: Date;
-  gaActiveUsers?: number;
-  gaActiveUsersByCountry?: Array<{country: string; users: number}>;
-  gaActiveUsersByPage?: Array<{page: string; users: number}>;
-  simpleGAActiveUsers?: number;
-}
+
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -36,9 +23,7 @@ export default function AdminPage() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [generatedJSON, setGeneratedJSON] = useState('')
   const [copySuccess, setCopySuccess] = useState(false)
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
-  const [analyticsLoading, setAnalyticsLoading] = useState(false)
-  const [analyticsError, setAnalyticsError] = useState('')
+
   const [sessionStartTime] = useState(Date.now())
   
   // Security state
@@ -63,7 +48,7 @@ export default function AdminPage() {
         try {
           const [ipResponse, locationResponse] = await Promise.allSettled([
             fetch('https://api.ipify.org?format=json'),
-            fetch('https://ipapi.co/json/')
+            fetch('https://ipinfo.io/json')
           ])
           
           if (ipResponse.status === 'fulfilled') {
@@ -233,55 +218,9 @@ export default function AdminPage() {
     URL.revokeObjectURL(url)
   }
 
-  const loadAnalytics = async () => {
-    setAnalyticsLoading(true)
-    setAnalyticsError('')
-    
-    try {
-      // Get PostHog stats
-      const posthogStats = await posthogAPI.getRealtimeStats()
-      
-      // Try to get Google Analytics real-time data
-      let gaData = null
-      try {
-        gaData = await googleAnalyticsAPI.getRealtimeActiveUsers()
-      } catch (gaError) {
-        console.log('Google Analytics real-time data not available:', gaError)
-        // Don't fail the entire analytics load if GA is not configured
-      }
-      
-      // Get simple GA tracking data as fallback
-      let simpleGAData = null
-      try {
-        simpleGAData = simpleGA.getSimulatedRealtimeData()
-      } catch (simpleGAError) {
-        console.log('Simple GA tracking not available:', simpleGAError)
-      }
-      
-      setAnalytics({
-        ...posthogStats,
-        gaActiveUsers: gaData?.activeUsers || 0,
-        gaActiveUsersByCountry: gaData?.activeUsersByCountry || [],
-        gaActiveUsersByPage: gaData?.activeUsersByPage || [],
-        simpleGAActiveUsers: simpleGAData?.activeUsers || 0,
-        lastUpdated: new Date(),
-      })
-    } catch (error) {
-      console.error('Failed to load analytics:', error)
-      setAnalyticsError('Failed to load analytics. Please check your PostHog configuration.')
-    } finally {
-      setAnalyticsLoading(false)
-    }
-  }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadAnalytics()
-      // Refresh analytics every 30 seconds
-      const interval = setInterval(loadAnalytics, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [isAuthenticated])
+
+
 
   const clearAnnouncement = () => {
     const emptyAnnouncement = {
@@ -416,149 +355,7 @@ export default function AdminPage() {
         <p className="text-muted-foreground">Manage site-wide announcements and view analytics</p>
       </motion.div>
 
-      {/* Analytics Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="glass rounded-2xl border border-border p-6 space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Real-time Analytics
-          </h2>
-          <button
-            onClick={loadAnalytics}
-            disabled={analyticsLoading}
-            className="px-3 py-1.5 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${analyticsLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
 
-        {analyticsError ? (
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
-            <p className="text-sm">{analyticsError}</p>
-            <p className="text-xs mt-2">Make sure to set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID in your environment variables.</p>
-          </div>
-        ) : analyticsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="p-4 rounded-xl bg-background/50 border border-border animate-pulse">
-                <div className="h-4 bg-background/70 rounded mb-2 w-1/2"></div>
-                <div className="h-8 bg-background/70 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        ) : analytics ? (
-          <div className="space-y-6">
-            {/* PostHog Analytics */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                PostHog Analytics
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-background/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                    <Eye className="w-4 h-4" />
-                    Total Views
-                  </div>
-                  <div className="text-2xl font-bold text-foreground">{analytics.totalViews.toLocaleString()}</div>
-                </div>
-                
-                <div className="p-4 rounded-xl bg-background/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                    <Users className="w-4 h-4" />
-                    Active Users
-                  </div>
-                  <div className="text-2xl font-bold text-green-400">{analytics.activeUsers.toLocaleString()}</div>
-                </div>
-                
-                <div className="p-4 rounded-xl bg-background/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                    <Activity className="w-4 h-4" />
-                    Current Sessions
-                  </div>
-                  <div className="text-2xl font-bold text-blue-400">{analytics.currentSessions.toLocaleString()}</div>
-                </div>
-                
-                <div className="p-4 rounded-xl bg-background/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                    <TrendingUp className="w-4 h-4" />
-                    Total Users
-                  </div>
-                  <div className="text-2xl font-bold text-purple-400">{analytics.totalUsers.toLocaleString()}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Google Analytics Real-time */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Globe className="w-5 h-5 text-blue-400" />
-                Google Analytics Real-time
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-background/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                    <Users className="w-4 h-4" />
-                    Real-time Active Users
-                  </div>
-                  <div className="text-2xl font-bold text-blue-400">
-                    {analytics.gaActiveUsers ? analytics.gaActiveUsers.toLocaleString() : 
-                     analytics.simpleGAActiveUsers ? analytics.simpleGAActiveUsers.toLocaleString() : 'N/A'}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {analytics.gaActiveUsers ? 'GA API (Last 30 min)' : 
-                     analytics.simpleGAActiveUsers ? 'Local Tracking' : 'Not configured'}
-                  </p>
-                </div>
-
-                {analytics.gaActiveUsersByCountry && analytics.gaActiveUsersByCountry.length > 0 && (
-                  <div className="p-4 rounded-xl bg-background/50 border border-border md:col-span-2">
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
-                      <Globe className="w-4 h-4" />
-                      Active Users by Country
-                    </div>
-                    <div className="space-y-1">
-                      {analytics.gaActiveUsersByCountry.slice(0, 3).map((country, index) => (
-                        <div key={index} className="flex justify-between text-sm">
-                          <span className="text-foreground">{country.country}</span>
-                          <span className="text-blue-400 font-medium">{country.users}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {analytics.gaActiveUsersByPage && analytics.gaActiveUsersByPage.length > 0 && (
-                <div className="mt-4 p-4 rounded-xl bg-background/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
-                    <Eye className="w-4 h-4" />
-                    Active Users by Page
-                  </div>
-                  <div className="space-y-1">
-                    {analytics.gaActiveUsersByPage.slice(0, 3).map((page, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span className="text-foreground truncate">{page.page}</span>
-                        <span className="text-blue-400 font-medium">{page.users}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="text-xs text-muted-foreground text-center">
-              Last updated: {analytics.lastUpdated.toLocaleTimeString()}
-            </div>
-          </div>
-        ) : null}
-      </motion.section>
 
       {/* Current Announcement */}
       <motion.section

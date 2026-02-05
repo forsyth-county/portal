@@ -132,13 +132,13 @@ export function GeoLock() {
 async function performGeoChecks(): Promise<GeoLocation> {
   const geoData: GeoLocation = {}
   
-  // Method 1: ipapi.co (Free, no API key required)
+  // Method 1: ipinfo.io (Free, no API key required)
   try {
     // Create AbortController for timeout
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
     
-    const response = await fetch('https://ipapi.co/json/', {
+    const response = await fetch('https://ipinfo.io/json', {
       signal: controller.signal
     })
     clearTimeout(timeoutId)
@@ -157,7 +157,7 @@ async function performGeoChecks(): Promise<GeoLocation> {
       // Users can access the site regardless of VPN usage
     }
   } catch (error) {
-    console.warn('ipapi.co failed:', error)
+    console.warn('ipinfo.io failed:', error)
   }
 
   // Method 2: ipinfo.io (backup, free, no API key required)
