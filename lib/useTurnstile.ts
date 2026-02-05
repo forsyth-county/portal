@@ -83,8 +83,7 @@ export function useTurnstile({
       widgetIdRef.current = window.turnstile!.render(containerRef.current, {
         sitekey,
         theme,
-        appearance: 'execute', // Invisible mode - runs challenge immediately
-        execution: 'execute',  // Execute challenge on render
+        appearance: 'execute', // Invisible mode - runs challenge immediately on render
         callback: (responseToken: string) => {
           console.log('✓ Turnstile token received (client-side only - NO server validation)')
           setToken(responseToken)

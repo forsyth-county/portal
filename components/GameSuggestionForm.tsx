@@ -35,6 +35,7 @@ export function GameSuggestionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
   const [submitEnabled, setSubmitEnabled] = useState(false)
+  const [lastSubmissionSuccess, setLastSubmissionSuccess] = useState(false)
 
   // Cloudflare Turnstile integration
   const { containerRef, token, reset: resetTurnstile } = useTurnstile({
@@ -125,6 +126,7 @@ export function GameSuggestionForm() {
       
       if (data.success) {
         setResult("Game suggestion submitted successfully! Thank you!")
+        setLastSubmissionSuccess(true)
         ;(event.target as HTMLFormElement).reset()
         
         // Reset Turnstile widget
@@ -148,14 +150,16 @@ export function GameSuggestionForm() {
       } else {
         console.error("Form submission failed:", data)
         setResult(`Error: ${data.message || "Unknown error occurred. Please try again."}`)
+        setLastSubmissionSuccess(false)
       }
     } catch (error) {
       console.error("Form submission error:", error)
       setResult("Unable to submit your suggestion. Please check your connection and try again.")
+      setLastSubmissionSuccess(false)
     } finally {
       setIsSubmitting(false)
       // Reset Turnstile on error to allow retry
-      if (!result.includes("successfully")) {
+      if (!lastSubmissionSuccess) {
         resetTurnstile()
         setSubmitEnabled(false)
       }
@@ -190,9 +194,6 @@ export function GameSuggestionForm() {
         {/* Cloudflare Turnstile - Invisible Container */}
         {/* This is hidden as the widget runs in invisible mode */}
         <div ref={containerRef} id="cf-turnstile" style={{ display: 'none' }} />
-        
-        {/* Hidden input to store Turnstile token (client-side only - not validated) */}
-        <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response" value={token || ''} />
 
         <div className="space-y-2">
           <label htmlFor="message" className="block text-sm font-medium text-foreground">
@@ -251,7 +252,7 @@ export function GameSuggestionForm() {
       <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
         <p className="text-xs text-yellow-200/70">
           <strong>Security Info:</strong> This form uses Cloudflare Turnstile for basic spam protection. 
-          Due to GitHub Pages limitations (no server-side code), the security token is validated client-side only. 
+          Due to GitHub Pages limitations (no server-side code), the security token is only validated client-side. 
           This provides deterrence against simple bots but not full security. 
           For enhanced protection, consider migrating to Cloudflare Pages or similar platforms with serverless functions.
         </p>
