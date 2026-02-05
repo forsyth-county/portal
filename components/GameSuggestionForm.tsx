@@ -58,6 +58,9 @@ export function GameSuggestionForm() {
 
   // Check for cooldown on mount
   useEffect(() => {
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') return
+    
     const lastSubmission = localStorage.getItem('forsyth-form-last-submit')
     if (lastSubmission) {
       const timeSinceSubmit = Date.now() - parseInt(lastSubmission)
@@ -84,6 +87,9 @@ export function GameSuggestionForm() {
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    
+    // Ensure we're in a browser environment
+    if (typeof window === 'undefined') return
     
     // Check rate limit
     const lastSubmission = localStorage.getItem('forsyth-form-last-submit')
