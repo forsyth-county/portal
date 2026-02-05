@@ -9,6 +9,7 @@ import { BookmarkNotification } from '@/components/BookmarkNotification'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { GridBackground } from '@/components/ui/grid-background-demo'
+import { WelcomeNotification } from '@/components/WelcomeNotification'
 
 // Most popular games get higher weights for better random selection
 const popularGameWeights: Record<string, number> = {
@@ -48,6 +49,7 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-16">
+      <WelcomeNotification />
       <GridBackground />
       <BookmarkNotification />
       
