@@ -142,90 +142,120 @@ export function TabCloak() {
   }
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="glass rounded-2xl border border-border p-8 space-y-4"
-    >
-      <div className="flex items-center gap-3">
-        <Globe className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-bold text-primary">Tab Cloaking</h2>
-      </div>
+    <section className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl hover:shadow-blue-500/10 transition-all duration-500">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      <p className="text-muted-foreground text-sm">
-        Change your browser tab title and icon to blend in. Select a preset below:
-      </p>
-
-      <div className="grid gap-3 mt-6">
-        {cooldownRemaining > 0 && (
-          <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
-            <p className="text-sm text-yellow-200/80">
-              Please wait {cooldownRemaining} second{cooldownRemaining !== 1 ? 's' : ''} before changing cloak again.
-            </p>
+      <div className="relative p-8 lg:p-10 space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
+            <Globe className="w-6 h-6 text-blue-400" />
           </div>
-        )}
-        
-        {/* Default Option */}
-        <button
-          onClick={() => applyCloak('none')}
-          disabled={cooldownRemaining > 0}
-          className={`p-4 rounded-xl border-2 transition-all text-left ${
-            selectedCloak === 'none'
-              ? 'border-primary bg-primary/10'
-              : 'border-border hover:border-primary/50'
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Globe className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <div className="font-semibold text-foreground">Default</div>
-              <div className="text-sm text-muted-foreground">Forsyth Games Portal</div>
-            </div>
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Tab Cloaking</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Disguise your tab with educational presets</p>
           </div>
-        </button>
+        </div>
 
-        {/* Cloak Options */}
-        {CLOAK_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            onClick={() => applyCloak(option.id)}
-            disabled={cooldownRemaining > 0}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
-              selectedCloak === option.id
-                ? 'border-primary bg-primary/10'
-                : 'border-border hover:border-primary/50'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <div className="flex items-center gap-3">
-              <Image
-                src={option.icon}
-                alt={option.name}
-                width={40}
-                height={40}
-                className="rounded-lg object-cover"
-                unoptimized
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = DEFAULT_FAVICON
-                }}
-              />
-              <div>
-                <div className="font-semibold text-foreground">{option.name}</div>
-                <div className="text-sm text-muted-foreground">{option.title}</div>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-        <p className="text-sm text-yellow-200/80">
-          <strong>Note:</strong> The tab cloak will be applied immediately and persist across sessions.
+        {/* Description */}
+        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+          Change your browser tab title and icon to blend in. Select a preset below to instantly apply the disguise:
         </p>
+
+        {/* Cooldown Message */}
+        {cooldownRemaining > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20"
+          >
+            <p className="text-sm text-yellow-600/90 dark:text-yellow-300/90 text-center">
+              ⏱️ Please wait {cooldownRemaining} second{cooldownRemaining !== 1 ? 's' : ''} before changing cloak again.
+            </p>
+          </motion.div>
+        )}
+
+        {/* Preset Cards - Horizontal Scroll */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Choose Your Disguise</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {/* Default Option */}
+            <button
+              onClick={() => applyCloak('none')}
+              disabled={cooldownRemaining > 0}
+              className={`flex-shrink-0 w-48 p-4 rounded-2xl border-2 transition-all duration-300 text-left group ${
+                selectedCloak === 'none'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 shadow-lg shadow-blue-500/20'
+                  : 'border-slate-300/50 dark:border-slate-600/50 hover:border-blue-500/50 hover:bg-slate-100/50 dark:hover:bg-slate-700/30'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Globe className="w-7 h-7 text-blue-400" />
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-white">Default</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Forsyth Portal</div>
+                </div>
+                {selectedCloak === 'none' && (
+                  <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span>Active</span>
+                  </div>
+                )}
+              </div>
+            </button>
+
+            {/* Cloak Options */}
+            {CLOAK_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => applyCloak(option.id)}
+                disabled={cooldownRemaining > 0}
+                className={`flex-shrink-0 w-48 p-4 rounded-2xl border-2 transition-all duration-300 text-left group ${
+                  selectedCloak === option.id
+                    ? 'border-blue-500 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 shadow-lg shadow-blue-500/20'
+                    : 'border-slate-300/50 dark:border-slate-600/50 hover:border-blue-500/50 hover:bg-slate-100/50 dark:hover:bg-slate-700/30'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden group-hover:scale-110 transition-transform">
+                    <Image
+                      src={option.icon}
+                      alt={option.name}
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = DEFAULT_FAVICON
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white">{option.name}</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 mt-1 truncate">{option.title}</div>
+                  </div>
+                  {selectedCloak === option.id && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>Active</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Info Note */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+          <p className="text-sm text-blue-700/90 dark:text-blue-300/90">
+            💡 <strong>Tip:</strong> The tab cloak applies immediately and persists across browser sessions. Perfect for staying discreet!
+          </p>
+        </div>
       </div>
-    </motion.section>
+    </section>
   )
 }

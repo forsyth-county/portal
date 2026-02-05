@@ -107,77 +107,115 @@ export function GameSuggestionForm() {
   }
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="glass rounded-2xl border border-border p-8 space-y-4"
-    >
-      <div className="flex items-center gap-3">
-        <Gamepad2 className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-bold text-primary">Game Suggestions</h2>
-      </div>
+    <section className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl hover:shadow-blue-500/10 transition-all duration-500">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      <p className="text-muted-foreground text-sm">
-        Have a game you&apos;d like to see added to the portal? Let us know!
-      </p>
-
-      <form onSubmit={onSubmit} className="space-y-4 mt-6">
-        {/* Hidden fields for Web3Forms */}
-        <input type="hidden" name="access_key" value="e93c5755-8acb-4e64-872b-2ba9d3b00e54" />
-        <input type="hidden" name="subject" value="New Game Suggestion from Forsyth Games Portal" />
-        <input type="hidden" name="from_name" value="Forsyth Games Portal User" />
-        
-        {/* Honeypot field - must be hidden and empty */}
-        <input type="checkbox" name="botcheck" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-        
-        <div className="space-y-2">
-          <label htmlFor="message" className="block text-sm font-medium text-foreground">
-            Game Suggestion
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            required
-            rows={5}
-            className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder-muted-foreground transition-all resize-none"
-            placeholder="Tell us about the game you'd like to see added (name, description, link if available)"
-            disabled={isSubmitting}
-          />
+      <div className="relative p-8 lg:p-10 space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+            <Gamepad2 className="w-6 h-6 text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">Game Suggestions</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Help us improve the game library</p>
+          </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting || cooldownRemaining > 0}
-          className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {cooldownRemaining > 0 
-            ? `Please wait ${cooldownRemaining}s` 
-            : isSubmitting 
-              ? "Submitting..." 
-              : "Submit Suggestion"}
-        </button>
-
-        {result && (
-          <div
-            className={`p-4 rounded-xl text-center ${
-              result.includes("successfully")
-                ? "bg-green-500/10 border border-green-500/20 text-green-400"
-                : result.includes("Error") || result.includes("captcha")
-                ? "bg-red-500/10 border border-red-500/20 text-red-400"
-                : "bg-blue-500/10 border border-blue-500/20 text-blue-400"
-            }`}
-          >
-            {result}
-          </div>
-        )}
-      </form>
-
-      <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-        <p className="text-sm text-blue-200/80">
-          <strong>Note:</strong> Your suggestion will be reviewed by our team. We appreciate your input in making this portal better!
+        {/* Description */}
+        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+          Have a game you&apos;d like to see added to the portal? Let us know! We review all suggestions and add the best games regularly.
         </p>
+
+        {/* Suggestion Form */}
+        <form onSubmit={onSubmit} className="space-y-6">
+          {/* Hidden fields for Web3Forms */}
+          <input type="hidden" name="access_key" value="e93c5755-8acb-4e64-872b-2ba9d3b00e54" />
+          <input type="hidden" name="subject" value="New Game Suggestion from Forsyth Games Portal" />
+          <input type="hidden" name="from_name" value="Forsyth Games Portal User" />
+          
+          {/* Honeypot field - must be hidden and empty */}
+          <input type="checkbox" name="botcheck" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+          
+          {/* Game Suggestion Input */}
+          <div className="space-y-3">
+            <label htmlFor="message" className="block text-sm font-semibold text-slate-900 dark:text-white">
+              Tell us about the game you'd like to see
+            </label>
+            <div className="relative">
+              <textarea
+                id="message"
+                name="message"
+                required
+                rows={6}
+                className="w-full px-6 py-4 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-300/50 dark:border-slate-600/50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500/50 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 transition-all duration-300 resize-none text-base leading-relaxed"
+                placeholder="Share details about the game you'd like us to add...
+
+• Game name and description
+• Why you think it would be a great addition
+• Any links or where we can find it
+• What makes it fun or educational"
+                disabled={isSubmitting}
+              />
+              <div className="absolute bottom-4 right-4 text-xs text-slate-500 dark:text-slate-400">
+                {typeof document !== 'undefined' && 
+                  document.getElementById('message') && 
+                  (document.getElementById('message') as HTMLTextAreaElement).value.length}/500
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting || cooldownRemaining > 0}
+            className="w-full px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            {cooldownRemaining > 0 
+              ? `Please wait ${cooldownRemaining}s` 
+              : isSubmitting 
+                ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Submitting...
+                  </span>
+                )  
+                : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Gamepad2 className="w-5 h-5" />
+                    Submit Suggestion
+                  </span>
+                )}
+          </button>
+
+          {/* Result Messages */}
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`p-4 rounded-2xl text-center ${
+                result.includes("successfully")
+                  ? "bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 text-green-700/90 dark:text-green-300/90"
+                  : result.includes("Error") || result.includes("captcha")
+                  ? "bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/20 text-red-700/90 dark:text-red-300/90"
+                  : "bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 text-blue-700/90 dark:text-blue-300/90"
+              }`}
+            >
+              {result}
+            </motion.div>
+          )}
+        </form>
+
+        {/* Info Note */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+          <p className="text-sm text-purple-700/90 dark:text-purple-300/90">
+            🎮 <strong>Tip:</strong> Your suggestion will be reviewed by our team. We appreciate your input in making this portal better for everyone!
+          </p>
+        </div>
       </div>
-    </motion.section>
+    </section>
   )
 }

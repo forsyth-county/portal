@@ -31,74 +31,93 @@ export function TimeRestrictionToggle() {
   }
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="glass rounded-2xl border border-border p-8 space-y-4"
-    >
-      <div className="flex items-center gap-3">
-        <Clock className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-bold text-primary">After School Hours Lock</h2>
-      </div>
+    <section className="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl hover:shadow-blue-500/10 transition-all duration-500">
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      <p className="text-muted-foreground text-sm">
-        Control when the portal can be accessed. When enabled, the portal is only available during school hours (6 AM - 5 PM ET).
-      </p>
+      <div className="relative p-8 lg:p-10 space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30">
+            <Clock className="w-6 h-6 text-orange-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">After School Hours Lock</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Control portal access times</p>
+          </div>
+        </div>
 
-      <div className="mt-6">
-        <button
-          onClick={toggleRestriction}
-          className={`w-full p-4 rounded-xl border-2 transition-all ${
-            isEnabled
-              ? 'border-red-500/50 bg-red-500/10 hover:border-red-500'
-              : 'border-green-500/50 bg-green-500/10 hover:border-green-500'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        {/* Description */}
+        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+          Control when the portal can be accessed. When enabled, the portal is only available during school hours (6 AM - 5 PM ET).
+        </p>
+
+        {/* Modern Toggle Switch */}
+        <div className="flex items-center justify-between p-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/30 border border-slate-200/50 dark:border-slate-700/30">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl transition-all duration-300 ${
+              isEnabled 
+                ? 'bg-red-500/20 border border-red-500/30' 
+                : 'bg-green-500/20 border border-green-500/30'
+            }`}>
               {isEnabled ? (
-                <Lock className="w-8 h-8 text-red-400" />
+                <Lock className="w-6 h-6 text-red-400" />
               ) : (
-                <Unlock className="w-8 h-8 text-green-400" />
+                <Unlock className="w-6 h-6 text-green-400" />
               )}
-              <div className="text-left">
-                <div className="font-semibold text-foreground text-lg">
-                  {isEnabled ? 'Time Restriction Enabled' : 'Time Restriction Disabled'}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {isEnabled 
-                    ? 'Portal locked outside 6 AM - 5 PM ET' 
-                    : 'Portal accessible at any time'}
-                </div>
+            </div>
+            <div>
+              <div className="font-semibold text-slate-900 dark:text-white text-lg">
+                {isEnabled ? 'Time Restriction Enabled' : 'Time Restriction Disabled'}
+              </div>
+              <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                {isEnabled 
+                  ? 'Portal locked outside 6 AM - 5 PM ET' 
+                  : 'Portal accessible at any time'}
               </div>
             </div>
-            <div className={`px-4 py-2 rounded-lg font-semibold ${
-              isEnabled 
-                ? 'bg-red-500/20 text-red-400' 
-                : 'bg-green-500/20 text-green-400'
-            }`}>
-              {isEnabled ? 'ON' : 'OFF'}
-            </div>
           </div>
-        </button>
+          
+          {/* Modern Switch */}
+          <button
+            onClick={toggleRestriction}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 ${
+              isEnabled ? 'bg-red-500' : 'bg-slate-300 dark:bg-slate-600'
+            }`}
+          >
+            <span className="sr-only">Toggle time restriction</span>
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-300 shadow-lg ${
+                isEnabled ? 'translate-x-7' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Status Messages */}
+        {!isEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20"
+          >
+            <p className="text-sm text-green-700/90 dark:text-green-300/90">
+              ✓ <strong>Time restriction disabled:</strong> You can now access the portal at any time, including after school hours.
+            </p>
+          </motion.div>
+        )}
+
+        {isEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20"
+          >
+            <p className="text-sm text-yellow-700/90 dark:text-yellow-300/90">
+              ⏰ <strong>Note:</strong> The portal will only be accessible during school hours (6 AM - 5 PM Eastern Time) when this setting is enabled.
+            </p>
+          </motion.div>
+        )}
       </div>
-
-      {!isEnabled && (
-        <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-          <p className="text-sm text-green-200/80">
-            <strong>✓ Time restriction disabled:</strong> You can now access the portal at any time, including after school hours.
-          </p>
-        </div>
-      )}
-
-      {isEnabled && (
-        <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <p className="text-sm text-yellow-200/80">
-            <strong>Note:</strong> The portal will only be accessible during school hours (6 AM - 5 PM Eastern Time) when this setting is enabled.
-          </p>
-        </div>
-      )}
-    </motion.section>
+    </section>
   )
 }
