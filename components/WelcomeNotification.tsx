@@ -9,33 +9,48 @@ export function WelcomeNotification() {
     if (typeof window === "undefined" || shown) return;
     if (!navigator.geolocation) return;
 
+    function showWelcomeByCoords(latitude: number, longitude: number) {
+      let closest = null;
+      let minDist = Infinity;
+      schoolLocations.forEach((school) => {
+        const dist = getDistance(latitude, longitude, school.lat, school.lng);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = school.name;
+        }
+      });
+      if (minDist < 20 && closest) {
+        Toastify({
+          text: `Welcome ${closest}!`,
+          duration: 6000,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "#4caf50",
+          stopOnFocus: true,
+        }).showToast();
+        setShown(true);
+      }
+    }
+
+    function fallbackIpGeolocation() {
+      fetch("https://ipinfo.io/json?token=demo")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.loc) {
+            const [latitude, longitude] = data.loc.split(",").map(Number);
+            showWelcomeByCoords(latitude, longitude);
+          }
+        })
+        .catch(() => {});
+    }
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        let closest = null;
-        let minDist = Infinity;
-        schoolLocations.forEach((school) => {
-          const dist = getDistance(latitude, longitude, school.lat, school.lng);
-          if (dist < minDist) {
-            minDist = dist;
-            closest = school.name;
-          }
-        });
-        if (minDist < 20 && closest) {
-          Toastify({
-            text: `Welcome ${closest}!`,
-            duration: 6000,
-            gravity: "top",
-            position: "center",
-            backgroundColor: "#4caf50",
-            stopOnFocus: true,
-          }).showToast();
-          setShown(true);
-        }
+        showWelcomeByCoords(latitude, longitude);
       },
       (error) => {
-        // Permission denied or error: do nothing or show generic
-        // Toastify({ text: "Welcome!", ... })
+        fallbackIpGeolocation();
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
