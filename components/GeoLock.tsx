@@ -161,31 +161,39 @@ async function performGeoChecks(): Promise<GeoLocation> {
     console.warn('ipapi.co failed:', error)
   }
 
-  // Method 2: ip-api.com (backup, free, no API key)
+  // Method 2: ipinfo.io (backup, free, no API key required)
   if (!geoData.country) {
     try {
-      const response = await fetch('http://ip-api.com/json/', {
+      const response = await fetch('https://ipinfo.io/json', {
         signal: AbortSignal.timeout(5000)
       })
       if (response.ok) {
         const data = await response.json()
-        if (data.status === 'success') {
-          geoData.country = data.country
-          geoData.region = data.regionName
-          geoData.state = data.regionName
-          geoData.city = data.city
-          geoData.lat = data.lat
-          geoData.lon = data.lon
-          geoData.timezone = data.timezone
-          
-          // Check for proxy
-          if (data.proxy || data.hosting) {
-            geoData.isVPN = true
-          }
+        geoData.country = data.country === 'US' ? 'United States' : data.country
+        geoData.region = data.region
+        geoData.state = data.region
+        geoData.city = data.city
+        
+        // Parse location coordinates
+        if (data.loc) {
+          const [lat, lon] = data.loc.split(',').map(Number)
+          geoData.lat = lat
+          geoData.lon = lon
+        }
+        
+        geoData.timezone = data.timezone
+        
+        // Check org for VPN/hosting indicators
+        if (data.org && (
+          data.org.toLowerCase().includes('vpn') ||
+          data.org.toLowerCase().includes('proxy') ||
+          data.org.toLowerCase().includes('hosting')
+        )) {
+          geoData.isVPN = true
         }
       }
     } catch (error) {
-      console.warn('ip-api.com failed:', error)
+      console.warn('ipinfo.io failed:', error)
     }
   }
 
@@ -256,7 +264,20 @@ function validateLocation(geoData: GeoLocation): boolean {
     geoData.region?.toLowerCase() === 'ga'
 
   if (!isGeorgia) {
-    return false
+    // Additional check: verify coordinates are within Georgia bounds
+    // Georgia approximate bounds: 30.36°N to 35°N, -85.61°W to -80.84°W
+    if (geoData.lat && geoData.lon) {
+      const inGeorgiaBounds = 
+        geoData.lat >= 30.36 && geoData.lat <= 35.0 &&
+        geoData.lon >= -85.61 && geoData.lon <= -80.84
+      
+      if (!inGeorgiaBounds) {
+        return false
+      }
+    } else {
+      // No coordinates and state name doesn't match - block
+      return false
+    }
   }
 
   // Additional validation: Check timezone
