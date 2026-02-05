@@ -3,14 +3,58 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Gamepad2 } from 'lucide-react'
+import { useTurnstile } from '@/lib/useTurnstile'
 
 const FORM_COOLDOWN_MS = 60 * 60 * 1000 // 60 minutes
+
+/**
+ * SECURITY NOTICE - CLIENT-SIDE ONLY BOT PROTECTION
+ * 
+ * This form uses Cloudflare Turnstile in INVISIBLE mode as a basic spam deterrent.
+ * 
+ * IMPORTANT LIMITATIONS:
+ * - This is CLIENT-SIDE ONLY - the token is NOT validated server-side
+ * - GitHub Pages cannot run server-side code for validation
+ * - This provides basic protection against simple bots only
+ * - Determined attackers can bypass client-side checks
+ * 
+ * WHY THIS APPROACH:
+ * - Better than nothing for deterring basic spam bots
+ * - Invisible mode = no user friction for legitimate users
+ * - Combined with rate limiting provides reasonable protection
+ * 
+ * FOR FULL SECURITY:
+ * - Migrate to Cloudflare Pages + Workers/Functions
+ * - Or use Vercel/Netlify with serverless functions
+ * - Then implement proper server-side token validation
+ * - See: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
+ */
 
 export function GameSuggestionForm() {
   const [result, setResult] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  // Captcha removed
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
+  const [submitEnabled, setSubmitEnabled] = useState(false)
+  const [lastSubmissionSuccess, setLastSubmissionSuccess] = useState(false)
+
+  // Cloudflare Turnstile integration
+  const { containerRef, token, reset: resetTurnstile } = useTurnstile({
+    sitekey: '0x4AAAAAACXz0aRXoDOkVLOC',
+    theme: 'auto',
+    onSuccess: (token) => {
+      console.log('Turnstile verification complete (client-side only)')
+      setSubmitEnabled(true)
+    },
+    onError: (error) => {
+      console.error('Turnstile error:', error)
+      setSubmitEnabled(false)
+      setResult('Security verification failed. Please refresh the page and try again.')
+    },
+    onExpire: () => {
+      console.warn('Turnstile token expired')
+      setSubmitEnabled(false)
+    },
+  })
 
   // Check for cooldown on mount
   useEffect(() => {
@@ -52,13 +96,21 @@ export function GameSuggestionForm() {
       }
     }
     
-    // No captcha required
+    // Check Turnstile token (client-side only - no server validation possible)
+    if (!token) {
+      setResult('Security verification incomplete. Please wait a moment and try again.')
+      return
+    }
     
     setIsSubmitting(true)
     setResult("Sending....")
     
     const formData = new FormData(event.target as HTMLFormElement)
-    // No captcha field needed
+    
+    // Add Turnstile token to form data
+    // Note: This token is NOT validated server-side (GitHub Pages limitation)
+    // It serves as a basic client-side deterrent only
+    formData.append('cf-turnstile-response', token)
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
@@ -74,7 +126,12 @@ export function GameSuggestionForm() {
       
       if (data.success) {
         setResult("Game suggestion submitted successfully! Thank you!")
+        setLastSubmissionSuccess(true)
         ;(event.target as HTMLFormElement).reset()
+        
+        // Reset Turnstile widget
+        resetTurnstile()
+        setSubmitEnabled(false)
         
         // Set cooldown
         localStorage.setItem('forsyth-form-last-submit', Date.now().toString())
@@ -93,10 +150,18 @@ export function GameSuggestionForm() {
       } else {
         console.error("Form submission failed:", data)
         setResult(`Error: ${data.message || "Unknown error occurred. Please try again."}`)
+        setLastSubmissionSuccess(false)
+        // Reset Turnstile on error to allow retry
+        resetTurnstile()
+        setSubmitEnabled(false)
       }
     } catch (error) {
       console.error("Form submission error:", error)
       setResult("Unable to submit your suggestion. Please check your connection and try again.")
+      setLastSubmissionSuccess(false)
+      // Reset Turnstile on error to allow retry
+      resetTurnstile()
+      setSubmitEnabled(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -126,6 +191,10 @@ export function GameSuggestionForm() {
         
         {/* Honeypot field - must be hidden and empty */}
         <input type="checkbox" name="botcheck" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+        
+        {/* Cloudflare Turnstile - Invisible Container */}
+        {/* This is hidden as the widget runs in invisible mode */}
+        <div ref={containerRef} id="cf-turnstile" style={{ display: 'none' }} />
 
         <div className="space-y-2">
           <label htmlFor="message" className="block text-sm font-medium text-foreground">
@@ -143,19 +212,21 @@ export function GameSuggestionForm() {
         </div>
 
         <div className="flex justify-center">
-          {/* Captcha removed */}
+          {/* Turnstile widget is invisible - no visible element needed */}
         </div>
 
         <button
           type="submit"
-          disabled={isSubmitting || cooldownRemaining > 0}
+          disabled={isSubmitting || cooldownRemaining > 0 || !submitEnabled}
           className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {cooldownRemaining > 0 
             ? `Please wait ${cooldownRemaining}s` 
-            : isSubmitting 
-              ? "Submitting..." 
-              : "Submit Suggestion"}
+            : !submitEnabled && !isSubmitting
+              ? "Verifying security..."
+              : isSubmitting 
+                ? "Submitting..." 
+                : "Submit Suggestion"}
         </button>
 
         {result && (
@@ -176,6 +247,15 @@ export function GameSuggestionForm() {
       <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
         <p className="text-sm text-blue-200/80">
           <strong>Note:</strong> Your suggestion will be reviewed by our team. We appreciate your input in making this portal better!
+        </p>
+      </div>
+      
+      <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+        <p className="text-xs text-yellow-200/70">
+          <strong>Security Info:</strong> This form uses Cloudflare Turnstile for basic spam protection. 
+          Due to GitHub Pages limitations (no server-side code), the security token is only validated client-side. 
+          This provides deterrence against simple bots but not full security. 
+          For enhanced protection, consider migrating to Cloudflare Pages or similar platforms with serverless functions.
         </p>
       </div>
     </motion.section>

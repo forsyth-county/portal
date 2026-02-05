@@ -51,6 +51,12 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* Cloudflare Turnstile - Explicit Rendering Mode */}
+        <script 
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" 
+          async 
+          defer
+        ></script>
       </head>
       <body className={`${inter.className} min-h-screen`}>
         <div className="fixed inset-0 bg-gradient-cosmic -z-10" />
