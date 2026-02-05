@@ -19,7 +19,6 @@ export function TimeBasedAccessControl() {
   const router = useRouter()
   const pathname = usePathname()
   const [isBlocked, setIsBlocked] = useState(false)
-  const [isRedirecting, setIsRedirecting] = useState(false)
 
   useEffect(() => {
     const checkTime = () => {
@@ -37,17 +36,11 @@ export function TimeBasedAccessControl() {
 
       // If blocked and not already on locked page, redirect immediately
       if (blocked && pathname !== '/locked') {
-        setIsRedirecting(true)
-        // Use push instead of replace to allow browser back button
         router.push('/locked')
-        // Clear redirecting state after navigation completes
-        setTimeout(() => setIsRedirecting(false), 500)
       }
       // If not blocked and on locked page, redirect to home
       else if (!blocked && pathname === '/locked') {
-        setIsRedirecting(true)
         router.push('/')
-        setTimeout(() => setIsRedirecting(false), 500)
       }
     }
 
@@ -62,7 +55,7 @@ export function TimeBasedAccessControl() {
 
   // Render blocking overlay if blocked and not on locked page
   // This prevents any interaction while redirect is happening
-  if ((isBlocked && pathname !== '/locked') || isRedirecting) {
+  if (isBlocked && pathname !== '/locked') {
     return (
       <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center p-4">
         <div className="text-center">
