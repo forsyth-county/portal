@@ -6,9 +6,6 @@ import { Navigation } from '@/components/Navigation'
 import { TabCloakLoader } from '@/components/TabCloakLoader'
 import { Protection } from '@/components/Protection'
 import { ScreenPrivacyGuard } from '@/components/ScreenPrivacyGuard'
-import { AnnouncementBanner } from '@/components/AnnouncementBanner'
-import { AnnouncementProvider } from '@/components/AnnouncementContext'
-import { AnnouncementModal } from '@/components/AnnouncementModal'
 import { TosNotification } from '@/components/TosNotification'
 import { TabHider } from '@/components/TabHider'
 import { TimeBasedAccessControl } from '@/components/TimeBasedAccessControl'
@@ -54,8 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen`}>
-        <AnnouncementProvider>
-          <Script
+        <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-FGXXN9EK0N"
           strategy="afterInteractive"
         />
@@ -67,7 +63,6 @@ export default function RootLayout({
             gtag('config', 'G-FGXXN9EK0N');
           `}
         </Script>
-        
         <div className="fixed inset-0 bg-gradient-cosmic -z-10" />
         <GeoLock />
         <TimeBasedAccessControl />
@@ -75,15 +70,12 @@ export default function RootLayout({
         <ScreenPrivacyGuard />
         <TabCloakLoader />
         <TabHider />
-        <AnnouncementBanner />
-        <AnnouncementModal />
         <TosNotification />
         <Navigation />
         <main className="pt-24 pb-12 px-4">
           {children}
         </main>
         {/* Analytics and SpeedInsights removed */}
-        </AnnouncementProvider>
       </body>
     </html>
   )
