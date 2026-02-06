@@ -1,6 +1,15 @@
 // Security utilities for admin panel
 
 export class SecurityUtils {
+  // Hash a password using SHA-256
+  static async hashPassword(password: string): Promise<string> {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(password)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('')
+  }
+
   // Generate a secure random token
   static generateSecureToken(): string {
     const array = new Uint8Array(32)

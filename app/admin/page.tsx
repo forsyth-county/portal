@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, Lock, Send, Trash2, Bell, CheckCircle, AlertTriangle, Copy, Download, School, BarChart3, Users } from 'lucide-react'
 import { withBasePath } from '@/lib/utils'
+import { SecurityUtils } from '@/lib/security'
 
-const ADMIN_PASSCODE = '1140' // Admin passcode
+// SHA-256 hash of '1140'
+const ADMIN_PASSCODE_HASH = 'bc10b57514d76124b4120a34db2224067fed660b09408ade0b14b582946ff2fc'
 const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes
 const MAX_LOGIN_ATTEMPTS = 3 // Maximum failed attempts
 const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes lockout
@@ -90,7 +92,7 @@ export default function AdminPage() {
   const [schoolBreakdown, setSchoolBreakdown] = useState(generateSchoolVisitors(generateVisitorCount()))
   const [lastUpdated, setLastUpdated] = useState(new Date())
 
-  // Update mock analytics every 5 seconds for realistic fluctuation
+  // Update mock analytics every 30 seconds for realistic fluctuation
   useEffect(() => {
     if (!isAuthenticated) return
     
@@ -101,7 +103,7 @@ export default function AdminPage() {
       setLastUpdated(new Date())
     }
     
-    const interval = setInterval(refreshMockAnalytics, 5000)
+    const interval = setInterval(refreshMockAnalytics, 30000)
     return () => clearInterval(interval)
   }, [isAuthenticated])
 
@@ -200,7 +202,7 @@ export default function AdminPage() {
     return () => clearInterval(checkSession)
   }, [isAuthenticated, sessionStartTime])
 
-  const handlePasscodeSubmit = (e: React.FormEvent) => {
+  const handlePasscodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Check if locked out
@@ -217,7 +219,10 @@ export default function AdminPage() {
     setLoginAttempts(newAttempts)
     localStorage.setItem('forsyth-admin-attempts', newAttempts.toString())
 
-    if (passcode === ADMIN_PASSCODE) {
+    // Hash the input passcode and compare with stored hash
+    const passcodeHash = await SecurityUtils.hashPassword(passcode)
+    
+    if (passcodeHash === ADMIN_PASSCODE_HASH) {
       // Successful login
       setIsAuthenticated(true)
       sessionStorage.setItem('forsyth-admin-auth', 'true')
