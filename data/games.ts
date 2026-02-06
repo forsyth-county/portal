@@ -10,16 +10,16 @@ export const games: Game[] = [
   { id: 'bit-planes', name: 'Bit Planes', category: 'ACTION', iconUrl: '/games/bit-planes/favicon.png', iframeSrc: '/games/bit-planes/' },
   { id: 'bloons-tower-defense-5', name: 'Bloons Tower Defense 5', category: 'ACTION', iconUrl: '/games/bloons-tower-defense-5/favicon.png', iframeSrc: '/games/bloons-tower-defense-5/' },
   { id: 'death-run-3d', name: 'Death Run 3D', category: 'ACTION', iconUrl: '/games/death-run-3d/favicon.png', iframeSrc: '/games/death-run-3d/' },
-  { id: 'doomzio', name: 'Doom.io', category: 'ACTION', iconUrl: '/games/doomzio/favicon.png', iframeSrc: '/games/doomzio/' },
-  { id: 'five-nights-at-freddys-4', name: "Five Nights at Freddy's 4", category: 'ACTION', iconUrl: '/games/five-nights-at-freddys-4/favicon.png', iframeSrc: '/games/five-nights-at-freddys-4/' },
+  { id: 'doomzio', name: 'Doom.io', category: 'ACTION', iconUrl: '/games/doomzio/favicon.png', iframeSrc: '/games/doomzio/', inappropriate: true },
+  { id: 'five-nights-at-freddys-4', name: "Five Nights at Freddy's 4", category: 'ACTION', iconUrl: '/games/five-nights-at-freddys-4/favicon.png', iframeSrc: '/games/five-nights-at-freddys-4/', inappropriate: true },
   { id: 'fruit-ninja', name: 'Fruit Ninja', category: 'ACTION', iconUrl: '/games/fruit-ninja/favicon.png', iframeSrc: '/games/fruit-ninja/' },
-  { id: 'gun-mayhem', name: 'Gun Mayhem', category: 'ACTION', iconUrl: '/games/gun-mayhem/favicon.png', iframeSrc: '/games/gun-mayhem/' },
+  { id: 'gun-mayhem', name: 'Gun Mayhem', category: 'ACTION', iconUrl: '/games/gun-mayhem/favicon.png', iframeSrc: '/games/gun-mayhem/', inappropriate: true },
   { id: 'knights-battle-arena', name: 'Knights Battle Arena', category: 'ACTION', iconUrl: '/games/knights-battle-arena/favicon.png', iframeSrc: '/games/knights-battle-arena/' },
-  { id: 'melon-playground', name: 'Melon Playground', category: 'ACTION', iconUrl: '/games/melon-playground/favicon.png', iframeSrc: '/games/melon-playground/' },
+  { id: 'melon-playground', name: 'Melon Playground', category: 'ACTION', iconUrl: '/games/melon-playground/favicon.png', iframeSrc: '/games/melon-playground/', inappropriate: true },
   { id: 'ngon', name: 'N-Gon', category: 'ACTION', iconUrl: '/games/ngon/favicon.png', iframeSrc: '/games/ngon/' },
   { id: 'pixel-shooter', name: 'Pixel Shooter', category: 'ACTION', iconUrl: '/games/pixel-shooter/favicon.png', iframeSrc: '/games/pixel-shooter/' },
   { id: 'plants-vs-zombies', name: 'Plants vs Zombies', category: 'ACTION', iconUrl: '/games/plants-vs-zombies/favicon.png', iframeSrc: '/games/plants-vs-zombies/' },
-  { id: 'rooftop-snipers', name: 'Rooftop Snipers', category: 'ACTION', iconUrl: '/games/rooftop-snipers/favicon.png', iframeSrc: '/games/rooftop-snipers/' },
+  { id: 'rooftop-snipers', name: 'Rooftop Snipers', category: 'ACTION', iconUrl: '/games/rooftop-snipers/favicon.png', iframeSrc: '/games/rooftop-snipers/', inappropriate: true },
   { id: 'stick-war-2', name: 'Stick War 2', category: 'ACTION', iconUrl: '/games/stick-war-2/favicon.png', iframeSrc: '/games/stick-war-2/' },
   { id: 'stick-warriors', name: 'Stick Warriors', category: 'ACTION', iconUrl: '/games/stick-warriors/favicon.png', iframeSrc: '/games/stick-warriors/' },
   { id: 'super-smash-bros', name: 'Super Smash Bros', category: 'ACTION', iconUrl: '/games/super-smash-bros/favicon.png', iframeSrc: '/games/super-smash-bros/' },
@@ -29,7 +29,7 @@ export const games: Game[] = [
 
   // ADVENTURE
   { id: 'among-us', name: 'Among Us', category: 'ADVENTURE', iconUrl: '/games/among-us/favicon.png', iframeSrc: '/games/among-us/' },
-  { id: 'baldis-basics', name: "Baldi's Basics", category: 'ADVENTURE', iconUrl: '/games/baldis-basics/favicon.png', iframeSrc: '/games/baldis-basics/' },
+  { id: 'baldis-basics', name: "Baldi's Basics", category: 'ADVENTURE', iconUrl: '/games/baldis-basics/favicon.png', iframeSrc: '/games/baldis-basics/', inappropriate: true },
   { id: 'bob-the-robber-5', name: 'Bob the Robber 5', category: 'ADVENTURE', iconUrl: '/games/bob-the-robber-5/favicon.png', iframeSrc: '/games/bob-the-robber-5/' },
   { id: 'celeste', name: 'Celeste', category: 'ADVENTURE', iconUrl: '/games/celeste/favicon.png', iframeSrc: '/games/celeste/' },
   { id: 'dadish-3', name: 'Dadish 3', category: 'ADVENTURE', iconUrl: '/games/dadish-3/favicon.png', iframeSrc: '/games/dadish-3/' },
@@ -124,7 +124,7 @@ export const games: Game[] = [
 
   // CLASSIC/OTHER
   { id: 'age-of-war', name: 'Age of War', category: 'STRATEGY', iconUrl: '/games/age-of-war/favicon.png', iframeSrc: '/games/age-of-war/' },
-  { id: 'bitlife', name: 'BitLife', category: 'OTHER', iconUrl: '/games/bitlife/favicon.png', iframeSrc: '/games/bitlife/' },
+  { id: 'bitlife', name: 'BitLife', category: 'OTHER', iconUrl: '/games/bitlife/favicon.png', iframeSrc: '/games/bitlife/', inappropriate: true },
   { id: 'speed-per-click', name: 'Speed Per Click', category: 'OTHER', iconUrl: '/games/speed-per-click/favicon.png', iframeSrc: '/games/speed-per-click/' },
   { id: 'steal-a-brainrot', name: 'Steal a Brainrot', category: 'OTHER', iconUrl: '/games/steal-a-brainrot/favicon.png', iframeSrc: '/games/steal-a-brainrot/' },
 ]

@@ -6,16 +6,22 @@ import { Search } from 'lucide-react'
 import { games } from '@/data/games'
 import { GameCard } from '@/components/GameCard'
 import { GridBackground } from '@/components/ui/grid-background-demo'
+import { config } from '@/config/games'
 
 export default function GamesPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   // Group games by category
   const categorizedGames = useMemo(() => {
-    const filtered = games.filter(game => 
-      game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.category.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    const filtered = games.filter(game => {
+      const matchesSearch = 
+        game.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        game.category.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesAppropriateness = config.filterInappropriateContent ? !game.inappropriate : true
+      
+      return matchesSearch && matchesAppropriateness
+    })
 
     const grouped: Record<string, typeof games> = {}
     filtered.forEach(game => {

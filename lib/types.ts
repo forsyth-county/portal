@@ -4,6 +4,7 @@ export interface Game {
   category: string
   iconUrl: string
   iframeSrc: string
+  inappropriate?: boolean
 }
 
 export interface Utility {
