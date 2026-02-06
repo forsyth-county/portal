@@ -29,9 +29,7 @@ export function BookmarkNotification() {
       if (window.sidebar && window.sidebar.addPanel) {
         // @ts-expect-error - Firefox specific API
         window.sidebar.addPanel('Forsyth Games', window.location.href, '')
-        // @ts-expect-error - IE specific API
       } else if (window.external && ('AddFavorite' in window.external)) {
-        // @ts-expect-error - IE specific API
         (window.external as { AddFavorite: (url: string, title: string) => void }).AddFavorite(window.location.href, 'Forsyth Games')
         // @ts-expect-error - Opera specific API
       } else if (window.opera && window.print) {

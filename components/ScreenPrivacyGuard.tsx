@@ -116,7 +116,8 @@ export function ScreenPrivacyGuard() {
       if (typeof window.MediaRecorder !== 'undefined') {
         const OriginalMediaRecorder = window.MediaRecorder
         
-        const CustomMediaRecorder = function(stream: MediaStream, options?: MediaRecorderOptions) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const CustomMediaRecorder: any = function(stream: MediaStream, options?: MediaRecorderOptions) {
           // Analyze all tracks in the stream
           const tracks = stream.getTracks()
           
@@ -148,9 +149,9 @@ export function ScreenPrivacyGuard() {
         
         // Copy static methods and prototype
         CustomMediaRecorder.prototype = OriginalMediaRecorder.prototype
-        ;(CustomMediaRecorder as typeof MediaRecorder).isTypeSupported = OriginalMediaRecorder.isTypeSupported
+        CustomMediaRecorder.isTypeSupported = OriginalMediaRecorder.isTypeSupported
         
-        window.MediaRecorder = CustomMediaRecorder as typeof MediaRecorder
+        window.MediaRecorder = CustomMediaRecorder
       }
 
       // ========================================
