@@ -8,7 +8,6 @@ import { useEffect, useState, useRef } from 'react'
  */
 export function ScreenPrivacyGuard() {
   const [isBlackScreen, setIsBlackScreen] = useState(false)
-  const [isTabActive, setIsTabActive] = useState(true)
   const originalGetDisplayMedia = useRef<typeof navigator.mediaDevices.getDisplayMedia | null>(null)
   const originalGetUserMedia = useRef<typeof navigator.mediaDevices.getUserMedia | null>(null)
 
@@ -16,7 +15,6 @@ export function ScreenPrivacyGuard() {
     // ========================================
     // SCREEN RECORDING DETECTION
     // ========================================
-    let recordingCheckInterval: NodeJS.Timeout
 
     const checkForScreenRecording = () => {
       // ========================================
@@ -33,13 +31,13 @@ export function ScreenPrivacyGuard() {
 
       // Override getDisplayMedia to block all screen capture attempts
       if (navigator.mediaDevices) {
-        navigator.mediaDevices.getDisplayMedia = function(constraints?: MediaStreamConstraints) {
+        navigator.mediaDevices.getDisplayMedia = function() {
           console.log('🚫 Screen capture attempt blocked')
           setIsBlackScreen(true)
           
           // Send alert to monitoring system
           if (typeof window !== 'undefined' && 'gtag' in window) {
-            (window as any).gtag('event', 'screen_capture_blocked', {
+            (window as { gtag: (command: string, eventName: string, params: Record<string, string>) => void }).gtag('event', 'screen_capture_blocked', {
               event_category: 'security',
               event_label: 'screen_capture_attempt'
             })
@@ -87,9 +85,13 @@ export function ScreenPrivacyGuard() {
               const settings = track.getSettings()
               
               // Check if track looks like screen capture
+              const extendedSettings = settings as MediaTrackSettings & {
+                displaySurface?: string
+                logicalSurface?: string
+              }
               if (
-                (settings as any).displaySurface ||
-                (settings as any).logicalSurface ||
+                extendedSettings.displaySurface ||
+                extendedSettings.logicalSurface ||
                 track.label.toLowerCase().includes('screen') ||
                 track.label.toLowerCase().includes('display') ||
                 (settings.width && settings.height && 
@@ -146,9 +148,9 @@ export function ScreenPrivacyGuard() {
         
         // Copy static methods and prototype
         CustomMediaRecorder.prototype = OriginalMediaRecorder.prototype
-        ;(CustomMediaRecorder as any).isTypeSupported = OriginalMediaRecorder.isTypeSupported
+        ;(CustomMediaRecorder as typeof MediaRecorder).isTypeSupported = OriginalMediaRecorder.isTypeSupported
         
-        window.MediaRecorder = CustomMediaRecorder as any
+        window.MediaRecorder = CustomMediaRecorder as typeof MediaRecorder
       }
 
       // ========================================
@@ -172,8 +174,8 @@ export function ScreenPrivacyGuard() {
         
         if (typeof element.className === 'string') {
           className = element.className.toLowerCase()
-        } else if ((element.className as any)?.toString) {
-          className = (element.className as any).toString().toLowerCase()
+        } else if (typeof (element.className as SVGAnimatedString)?.toString === 'function') {
+          className = (element.className as SVGAnimatedString).toString().toLowerCase()
         }
         
         if (extensionIndicators.some(indicator => 
@@ -190,7 +192,6 @@ export function ScreenPrivacyGuard() {
       for (const canvas of canvases) {
         const ctx = canvas.getContext('2d')
         if (ctx) {
-          const imageData = ctx.getImageData(0, 0, 1, 1)
           // If canvas is capturing screen content, it might be suspicious
           if (canvas.width > 1920 || canvas.height > 1080) {
             console.log('🚫 Suspicious canvas activity detected')
@@ -202,7 +203,7 @@ export function ScreenPrivacyGuard() {
     }
 
     // Check periodically for screen recording attempts (reduced frequency)
-    recordingCheckInterval = setInterval(checkForScreenRecording, 5000) // Changed from 1000ms to 5000ms
+    const recordingCheckInterval = setInterval(checkForScreenRecording, 5000) // Changed from 1000ms to 5000ms
 
     // ========================================
     // TAB VISIBILITY DETECTION (Less aggressive)
@@ -210,10 +211,8 @@ export function ScreenPrivacyGuard() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // User switched tabs or minimized window - don't immediately black screen
-        setIsTabActive(false)
         // Only black screen if we detect actual capture attempts
       } else {
-        setIsTabActive(true)
         setIsBlackScreen(false)
       }
     }
@@ -242,7 +241,7 @@ export function ScreenPrivacyGuard() {
     // ========================================
     // MOUSE LEAVE DETECTION (Disabled for better UX)
     // ========================================
-    const handleMouseLeave = (e: MouseEvent) => {
+    const handleMouseLeave = () => {
       // Disabled - was causing issues during normal gameplay
       // If mouse leaves the window (moving to another monitor or application)
       // if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
@@ -259,7 +258,7 @@ export function ScreenPrivacyGuard() {
     // ========================================
     // KEYBOARD DETECTION (Disabled for better UX)
     // ========================================
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = () => {
       // Disabled - was interfering with gameplay
       // Detect common tab switching combinations
       // if (e.altKey && e.key === 'Tab') {
@@ -271,7 +270,7 @@ export function ScreenPrivacyGuard() {
       // }
     }
 
-    const handleKeyUp = (e: KeyboardEvent) => {
+    const handleKeyUp = () => {
       // Disabled - was interfering with gameplay
       // Reset when keys are released
       // if (e.altKey && e.key === 'Tab') {
@@ -282,8 +281,6 @@ export function ScreenPrivacyGuard() {
     // ========================================
     // DEVTOOLS DETECTION (Less aggressive)
     // ========================================
-    let devtoolsCheckInterval: NodeJS.Timeout
-
     const checkDevTools = () => {
       const threshold = 160
       if (window.outerHeight - window.innerHeight > threshold || 
@@ -295,7 +292,7 @@ export function ScreenPrivacyGuard() {
       }
     }
 
-    devtoolsCheckInterval = setInterval(checkDevTools, 2000) // Reduced frequency
+    const devtoolsCheckInterval = setInterval(checkDevTools, 2000) // Reduced frequency
 
     // ========================================
     // EVENT LISTENERS
