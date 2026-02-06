@@ -177,7 +177,7 @@ export function TabCloak() {
 
         {/* Preset Cards - Horizontal Scroll */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Choose Your Disguise</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white"> </h3>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {/* Default Option */}
             <button
