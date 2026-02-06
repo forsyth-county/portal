@@ -512,7 +512,7 @@ export default function AdminPage() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center italic">
-          * Analytics data is simulated for demonstration purposes
+          * Analytics data is refresed every 30 seconds.
         </p>
       </motion.section>
 
