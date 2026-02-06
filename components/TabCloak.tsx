@@ -252,7 +252,7 @@ export function TabCloak() {
         {/* Info Note */}
         <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
           <p className="text-sm text-blue-700/90 dark:text-blue-300/90">
-            💡 <strong>Tip:</strong> The tab cloak applies immediately and persists across browser sessions.
+            💡 | </strong> The theme applies immediately.
           </p>
         </div>
       </div>
