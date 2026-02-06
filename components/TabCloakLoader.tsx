@@ -7,34 +7,47 @@ const CLOAK_OPTIONS = [
   {
     id: 'google-drive',
     title: 'My Drive - Google Drive',
-    icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgPhsxRI-t33a1g_wvkRX5IhEKUB-2lHfQ5A&s',
-    cssClass: 'cloak-google-drive' // black background with white accents
+    bgColor: '#000000', // black background
+    cssClass: 'cloak-google-drive'
   },
   {
     id: 'canvas',
     title: 'Dashboard',
-    icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYWy6tLxBPdE65jokTz4cBuyyNGDkupZVdtg&s',
-    cssClass: 'cloak-canvas' // red theme
+    bgColor: '#1a0000', // dark red background
+    cssClass: 'cloak-canvas'
   },
   {
     id: 'classlink',
     title: 'ClassLink LaunchPad',
-    icon: 'https://play-lh.googleusercontent.com/ujsa1M8GdT-fo-GfPazpUwgPXVWEOWKUgKZk-SdnUhmcL3opS24MiHe6ypEgqxGpllw',
-    cssClass: 'cloak-classlink' // blue theme
+    bgColor: '#000a14', // dark blue background
+    cssClass: 'cloak-classlink'
   },
   {
     id: 'linewize',
     title: 'Linewize',
-    icon: 'https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/f23cec1c-1e86-4dc3-9e77-ce04c063ef21.jpeg?w=128&h=128&fit=max&dpr=3&auto=format&q=50',
-    cssClass: 'cloak-linewize' // blue theme
+    bgColor: '#000a14', // dark blue background
+    cssClass: 'cloak-linewize'
   },
   {
     id: 'infinite-campus',
     title: 'Campus Portal',
-    icon: 'https://3.files.edl.io/2e70/22/08/03/181301-467a6df0-d6f0-4a65-a41a-cb9e96558e30.png',
-    cssClass: 'cloak-infinite-campus' // green theme
+    bgColor: '#001a00', // dark green background
+    cssClass: 'cloak-infinite-campus'
   }
 ]
+
+// Utility function to create a solid color favicon as a data URL
+const createSolidColorFavicon = (color: string): string => {
+  const canvas = document.createElement('canvas')
+  canvas.width = 32
+  canvas.height = 32
+  const ctx = canvas.getContext('2d')
+  if (ctx) {
+    ctx.fillStyle = color
+    ctx.fillRect(0, 0, 32, 32)
+  }
+  return canvas.toDataURL('image/png')
+}
 
 // Helper to remove all cloak classes from body
 const removeCloakClasses = () => {
@@ -57,14 +70,14 @@ export function TabCloakLoader() {
         // Set title
         document.title = option.title
         
-        // Set favicon
+        // Set favicon with solid color matching background
         let favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement
         if (!favicon) {
           favicon = document.createElement('link')
           favicon.rel = 'icon'
           document.head.appendChild(favicon)
         }
-        favicon.href = option.icon
+        favicon.href = createSolidColorFavicon(option.bgColor)
         
         // Remove existing cloak classes and apply the saved one
         removeCloakClasses()
