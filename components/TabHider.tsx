@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
 export function TabHider() {
   const [isHidden, setIsHidden] = useState(false)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const pathname = usePathname()
   
   // Check if we're on a game page
@@ -47,9 +46,6 @@ export function TabHider() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('blur', handleBlur)
       window.removeEventListener('focus', handleFocus)
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
     }
   }, [isGamePage])
 
