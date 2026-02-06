@@ -3,56 +3,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Globe } from 'lucide-react'
-import Image from 'next/image'
+import { createSolidColorFavicon, CLOAK_OPTIONS } from '@/lib/tabCloakUtils'
 
-const DEFAULT_FAVICON = 'https://site.imsglobal.org/sites/default/files/orgs/logos/primary/fcslogo_hexagon.png'
 const CLOAK_COOLDOWN_MS = 3000 // 3 seconds
-
-interface CloakOption {
-  id: string
-  name: string
-  title: string
-  icon: string
-  cssClass: string
-}
-
-const CLOAK_OPTIONS: CloakOption[] = [
-  {
-    id: 'google-drive',
-    name: 'Google Drive',
-    title: 'My Drive - Google Drive',
-    icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgPhsxRI-t33a1g_wvkRX5IhEKUB-2lHfQ5A&s',
-    cssClass: 'cloak-google-drive' // black background with white accents
-  },
-  {
-    id: 'canvas',
-    name: 'Canvas',
-    title: 'Dashboard',
-    icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYWy6tLxBPdE65jokTz4cBuyyNGDkupZVdtg&s',
-    cssClass: 'cloak-canvas' // red theme
-  },
-  {
-    id: 'classlink',
-    name: 'Classlink',
-    title: 'ClassLink LaunchPad',
-    icon: 'https://play-lh.googleusercontent.com/ujsa1M8GdT-fo-GfPazpUwgPXVWEOWKUgKZk-SdnUhmcL3opS24MiHe6ypEgqxGpllw',
-    cssClass: 'cloak-classlink' // blue theme
-  },
-  {
-    id: 'linewize',
-    name: 'Linewize',
-    title: 'Linewize',
-    icon: 'https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/f23cec1c-1e86-4dc3-9e77-ce04c063ef21.jpeg?w=128&h=128&fit=max&dpr=3&auto=format&q=50',
-    cssClass: 'cloak-linewize' // blue theme
-  },
-  {
-    id: 'infinite-campus',
-    name: 'Infinite Campus',
-    title: 'Campus Portal',
-    icon: 'https://3.files.edl.io/2e70/22/08/03/181301-467a6df0-d6f0-4a65-a41a-cb9e96558e30.png',
-    cssClass: 'cloak-infinite-campus' // green theme
-  }
-]
 
 // Helper to remove all cloak classes from body
 const removeCloakClasses = () => {
@@ -109,7 +62,7 @@ export function TabCloak() {
       document.title = 'Forsyth Games Portal'
       const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement
       if (favicon) {
-        favicon.href = DEFAULT_FAVICON
+        favicon.href = 'https://site.imsglobal.org/sites/default/files/orgs/logos/primary/fcslogo_hexagon.png'
       }
       // Remove all cloak CSS classes
       removeCloakClasses()
@@ -121,14 +74,14 @@ export function TabCloak() {
       if (option) {
         document.title = option.title
         
-        // Update favicon
+        // Update favicon with solid color matching background
         let favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement
         if (!favicon) {
           favicon = document.createElement('link')
           favicon.rel = 'icon'
           document.head.appendChild(favicon)
         }
-        favicon.href = option.icon
+        favicon.href = createSolidColorFavicon(option.bgColor)
         
         // Remove existing cloak classes and add new one
         removeCloakClasses()
@@ -219,20 +172,10 @@ export function TabCloak() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <div className="space-y-3">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden group-hover:scale-110 transition-transform">
-                    <Image
-                      src={option.icon}
-                      alt={option.name}
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover"
-                      unoptimized
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = DEFAULT_FAVICON
-                      }}
-                    />
-                  </div>
+                  <div 
+                    className="w-12 h-12 rounded-xl group-hover:scale-110 transition-transform border border-slate-300/30"
+                    style={{ backgroundColor: option.bgColor }}
+                  />
                   <div>
                     <div className="font-bold text-slate-900 dark:text-white">{option.name}</div>
                     <div className="text-xs text-slate-600 dark:text-slate-400 mt-1 truncate">{option.title}</div>
