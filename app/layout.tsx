@@ -65,6 +65,13 @@ export default function RootLayout({
           `}
         </Script>
         
+        <Script
+          src="https://web3forms.com/client/script.js"
+          strategy="afterInteractive"
+          async
+          defer
+        />
+        
         <div className="fixed inset-0 bg-gradient-cosmic -z-10" />
         <GeoLock />
         <TimeBasedAccessControl />

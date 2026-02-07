@@ -48,6 +48,15 @@ export function GameSuggestionForm() {
     // Ensure we're in a browser environment
     if (typeof window === 'undefined') return
     
+    // Check hCaptcha
+    const form = event.target as HTMLFormElement
+    const hCaptchaResponse = form.querySelector('textarea[name=h-captcha-response]') as HTMLTextAreaElement
+    
+    if (!hCaptchaResponse || !hCaptchaResponse.value) {
+      setResult("Please complete the captcha verification")
+      return
+    }
+    
     // Check rate limit
     const lastSubmission = localStorage.getItem('forsyth-form-last-submit')
     if (lastSubmission) {
@@ -164,6 +173,9 @@ export function GameSuggestionForm() {
               </div>
             </div>
           </div>
+
+          {/* hCaptcha */}
+          <div className="h-captcha" data-captcha="true"></div>
 
           {/* Submit Button */}
           <button
