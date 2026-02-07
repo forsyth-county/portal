@@ -14,5 +14,19 @@ export const utilities: Utility[] = [
     description: 'Interactive generative art tool',
     iconUrl: '/utilities/silk/favicon.png',
     iframeSrc: '/utilities/silk/'
+  },
+  {
+    id: 'calculator',
+    name: 'Scientific Calculator',
+    description: 'Advanced calculator with scientific functions and history',
+    iconUrl: '/utilities/calculator/favicon.png',
+    iframeSrc: '/utilities/calculator/'
+  },
+  {
+    id: 'typing-test',
+    name: 'Typing Test',
+    description: 'Test your typing speed and accuracy with real-time stats',
+    iconUrl: '/utilities/typing-test/favicon.png',
+    iframeSrc: '/utilities/typing-test/'
   }
 ]
